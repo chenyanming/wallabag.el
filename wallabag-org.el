@@ -30,7 +30,10 @@
 ;;;###autoload
 (defun wallabag-org-link-view (id _)
   "Follow wallabag org links."
-  (wallabag-show-entry (car (wallabag-db-select (string-to-number id)))))
+  (let ((entry (wallabag-db-select (string-to-number id))))
+    (if entry
+        (wallabag-show-entry (car entry))
+      (message "No this entry."))))
 
 ;; TODO: The description can not be set.
 (org-link-set-parameters

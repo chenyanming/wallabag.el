@@ -64,7 +64,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 (use-package wallabag
   :defer t
   :load-path "~/.emacs.d/lisp/wallabag/"
-  :init 
+  :init
   (autoload 'wallabag "wallabag")
   :config
   (setq wallabag-host "https://xx.xx.xx") ;; wallabag server host name
@@ -81,7 +81,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 Start with ~M-x wallabag~. The first time, you need to press ~u~, then input the number of articles you want to retrieve from the server.
 
 ** Functions can be used outside wallabag related modes
-| wallabag               | Enter **wallabag-search** buffer.                                                                        |
+| wallabag               | Enter ~*wallabag-search*~ buffer.                                                                        |
 | wallabag-find          | Select wallabag entries from a list with ivy.                                                          |
 | wallabag-full-update   | Perform a full database update.                                                                        |
 | wallabag-request-token | Request a new token.                                                                                   |
@@ -92,8 +92,8 @@ Start with ~M-x wallabag~. The first time, you need to press ~u~, then input the
 
     | <RET> | wallabag-view                            | View the wallabag entry.                                             |
     | v     | wallabag-view                            | View the wallabag entry.                                             |
-    | /     | wallabag-search-live-filter              | Filter the *wallabag-search* buffer.                                   |
-    | q     | wallabag-search-quit                     | Quit **wallabag-entry** then **wallabag-search** and **wallabag-sidebar**. |
+    | /     | wallabag-search-live-filter              | Filter the ~*wallabag-search*~ buffer.                                   |
+    | q     | wallabag-search-quit                     | Quit ~*wallabag-entry*~ then ~*wallabag-search*~ and ~*wallabag-sidebar*~. |
     | r     | wallabag-search-refresh-and-clear-filter | Refresh wallabag and clear the filter keyword.                       |
     | R     | wallabag-search-clear-filter             | Clear the filter keyword.                                            |
     | u     | wallabag-search-update-and-clear-filter  | Request entries and clear the filter keyword.                        |

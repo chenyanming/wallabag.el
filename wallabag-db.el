@@ -21,7 +21,7 @@
       (make-directory (concat user-emacs-directory ".cache/")))
     (setq wallabag-db-connection (emacsql-sqlite wallabag-db-file))
 
-    ;; create revlog table
+    ;; create items table
     (emacsql wallabag-db-connection [:create-table :if-not-exists items ([tag
                                                                           is_archived
                                                                           is_starred

@@ -6,6 +6,7 @@
 * Table of Contents :TOC_1:noexport:
 - [[#description][Description]]
 - [[#features][Features]]
+- [[#known-bugs][Known Bugs]]
 - [[#installation-and-configuration][Installation and Configuration]]
 - [[#keybindings][Keybindings]]
 - [[#change-logs][Change logs]]
@@ -61,7 +62,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 #+end_src
 
 * Keybindings
-Start with ~M-x wallabag~.
+Start with ~M-x wallabag~. The first time, you need to press ~u~, then input the number of articles you want to retrieve from the server.
 
 ** wallabag-search-mode
 

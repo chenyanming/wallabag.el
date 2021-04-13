@@ -162,8 +162,7 @@ When live editing the filter, it is bound to :live.")
         (sort "created")
         (order "desc")
         (page 1)
-        (perpage (if (= (string-to-number (or perpage "0")) 0) 10 (string-to-number perpage)))
-        entries)
+        (perpage (if (= (string-to-number (or perpage "0")) 0) 10 (string-to-number perpage))))
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -173,7 +172,6 @@ When live editing the filter, it is bound to :live.")
                 ("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
                  ("Content-Type" . "application/json"))
-      :sync t
       :error
       (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
                      ;; one of error is token expires
@@ -193,8 +191,10 @@ When live editing the filter, it is bound to :live.")
                                              (wallabag-convert-tags-to-tag entry)) entry)
                                            ;; return entry
                                            entry)))
-                  (wallabag-db-insert entries))))
-    entries))
+                  (wallabag-db-insert entries)
+                  (message "Retrived %s articles." perpage)
+                  (wallabag)
+                  (wallabag-search-keyword-filter ""))))))
 
 (defun wallabag-request-format (&optional format)
   "Request the format to be exported."
@@ -246,7 +246,8 @@ When live editing the filter, it is bound to :live.")
                     (setq wallabag-all-tags tag-list)
                     (if (and wallabag-show-sidebar wallabag-all-tags)
                         (wallabag-sidebar-create-window))
-                    (message "Retrieved all tags Done")))))))
+                    ;; (message "Retrieved all tags Done")
+                    ))))))
 
 (defun wallabag-add-tags(tags)
   "Add TAGS to the entry at point.
@@ -742,10 +743,8 @@ Argument EVENT mouse event."
   (interactive)
   (setq wallabag-search-entries nil)
   (setq wallabag-full-entries nil)
-  (message "Retriving articles from wallabag host %s ..." wallabag-host)
   (call-interactively 'wallabag-request-entries)
-  (wallabag)
-  (wallabag-search-keyword-filter ""))
+  (message "Retriving articles from wallabag host %s ..." wallabag-host))
 
 ;;; wallabag-entry-mode
 

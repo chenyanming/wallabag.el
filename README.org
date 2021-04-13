@@ -46,6 +46,18 @@ This project relies on [[https://github.com/tkf/emacs-request][emacs-request]] a
 git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallabag/
 #+end_src
 
+** require
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/lisp/wallabag/")
+(require 'wallabag)
+(setq wallabag-host "https://xx.xx.xx") ;; wallabag server host name
+(setq wallabag-username "xx") ;; username
+(setq wallabag-password "xx") ;; password
+(setq wallabag-clientid "xx") ;; created with API clients management
+(setq wallabag-secret "xx") ;; created with API clients management
+#+END_SRC
+
+** use-package
 #+begin_src emacs-lisp
 (use-package wallabag
   :defer t
@@ -53,7 +65,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
   :init 
   (autoload 'wallabag "wallabag")
   :config
-  (setq wallabag-host "https://xx.xx.com")
+  (setq wallabag-host "https://xx.xx.xx") ;; wallabag server host name
   (setq wallabag-username "xx") ;; username
   (setq wallabag-password "xx") ;; password
   (setq wallabag-clientid "xx") ;; created with API clients management

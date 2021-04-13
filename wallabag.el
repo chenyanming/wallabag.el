@@ -342,7 +342,8 @@ TAGS are seperated by comma."
                              (wallabag-convert-tags-to-tag data)))
                           data))
                   (wallabag-db-insert (list data))
-                  (wallabag-search-refresh-and-clear-filter)
+                  (if (eq major-mode 'wallabag-search-mode)
+                    (wallabag-search-refresh-and-clear-filter))
                   (message "Add Entry Done"))))))
 
 (defun wallabag-insert-entry(title tags)

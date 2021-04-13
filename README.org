@@ -80,6 +80,14 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 * Keybindings
 Start with ~M-x wallabag~. The first time, you need to press ~u~, then input the number of articles you want to retrieve from the server.
 
+** Functions can be used outside wallabag related modes
+| wallabag               | Enter **wallabag-search** buffer.                                                                        |
+| wallabag-find          | Select wallabag entries from a list with ivy.                                                          |
+| wallabag-full-update   | Perform a full database update.                                                                        |
+| wallabag-request-token | Request a new token.                                                                                   |
+| wallabag-add-entry     | Add one entry to wallabag server, with URL and TAGS                                                    |
+| wallabag-insert-entry  | Insert an entry to wallabag server with current buffer content (behavior may be changed in the future) |
+
 ** wallabag-search-mode
 
     | <RET> | wallabag-view                            | View the wallabag entry.                                             |
@@ -101,7 +109,9 @@ Start with ~M-x wallabag~. The first time, you need to press ~u~, then input the
     | '     | wallabag-toggle-sidebar                  | Toggle sidebar.                                                      |
 
 ** wallabag-entry-mode
-    | q | wallabag-entry-quit | Quit **wallabag-entry**. |
+    | q       | wallabag-entry-quit | Quit **wallabag-entry**. |
+    | mouse-1 | wallabag-mouse-1    | Browse the url.        |
+    | ret     | wallabag-ret        | Browse the url.        |
 
 ** wallabag-sidebar-mode
 

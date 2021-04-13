@@ -17,6 +17,8 @@
 (defun wallabag-db ()
   "Connect or create database."
   (unless (and wallabag-db-connection (emacsql-live-p wallabag-db-connection))
+    (unless (file-exists-p (concat user-emacs-directory ".cache/"))
+      (make-directory (concat user-emacs-directory ".cache/")))
     (setq wallabag-db-connection (emacsql-sqlite wallabag-db-file))
 
     ;; create revlog table

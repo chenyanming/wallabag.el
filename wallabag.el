@@ -71,7 +71,7 @@
   :type 'string)
 
 (defcustom wallabag-json-file (expand-file-name (concat user-emacs-directory ".cache/wallabag.json"))
-  "Wallabag json file for all entries."
+  "TODO: Wallabag json file for all entries. Not Used now."
   :group 'wallabag
   :type 'string)
 
@@ -181,8 +181,8 @@ When live editing the filter, it is bound to :live.")
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; save the original string
-                  (with-temp-file wallabag-json-file
-                    (insert data))
+                  ;; (with-temp-file wallabag-json-file
+                  ;;   (insert data))
                   (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
                   (setq entries (cl-loop for entry in entries collect
                                          (progn

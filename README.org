@@ -1,0 +1,72 @@
+#+TITLE:   README
+#+DATE:    April 13, 2021
+#+SINCE:   <replace with next tagged release version>
+#+STARTUP: inlineimages nofold
+
+* Table of Contents :TOC_1:noexport:
+- [[#description][Description]]
+- [[#features][Features]]
+- [[#keybindings][Keybindings]]
+- [[#change-logs][Change logs]]
+
+* Description
+Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
+#+attr_org: :width 600px
+[[file:homepage.png]]
+
+* Features
+
+- [x] Request all entries
+- [x] Request all tags
+- [x] Add tags for one entry
+- [x] Delete tag for one entry
+- [x] Request format for one entry
+- [x] Add one entry
+- [x] Add one entry with current buffer content (Only Emacs has this feature!)
+- [x] Delete one entry
+- [x] Copy as org links (Only Emacs has this feature!)
+- [x] Offline database (Sqlite)
+- [x] Full update
+- [x] Real time search and filter
+- [x] Sidebar supported: Tags
+- [x] Select with Ivy
+- [ ] Advanced filter
+
+* Keybindings
+
+** wallabag-search-mode
+
+    | <RET> | wallabag-view                            | View the wallabag entry.                                             |
+    | v     | wallabag-view                            | View the wallabag entry.                                             |
+    | /     | wallabag-search-live-filter              | Filter the *wallabag-search* buffer.                                   |
+    | q     | wallabag-search-quit                     | Quit **wallabag-entry** then **wallabag-search** and **wallabag-sidebar**. |
+    | r     | wallabag-search-refresh-and-clear-filter | Refresh wallabag and clear the filter keyword.                       |
+    | R     | wallabag-search-clear-filter             | Clear the filter keyword.                                            |
+    | u     | wallabag-search-update-and-clear-filter  | Request entries and clear the filter keyword.                        |
+    | m     | wallabag-mark-and-forward                | Mark entry and forward.                                              |
+    | <DEL> | wallabag-unmark-and-backward             | Unmark entry adn backword.                                           |
+    | a     | wallabag-add-entry                       | Add an entry.                                                        |
+    | d     | wallabag-delete-entry                    | Delete an entry.                                                     |
+    | j     | wallabag-next-entry                      | Move to next entry.                                                  |
+    | k     | wallabag-previous-entry                  | Move to previous entry.                                              |
+    | y     | wallabag-org-link-copy                   | Copy marked entries as org links.                                    |
+    | t     | wallabag-add-tags                        | Add tags (seperated by comma) to entry at point.                     |
+    | T     | wallabag-remove-tag                      | Remove one tag from list.                                            |
+    | '     | wallabag-toggle-sidebar                  | Toggle sidebar.                                                      |
+
+** wallabag-entry-mode
+    | q | wallabag-entry-quit | Quit **wallabag-entry**. |
+
+** wallabag-sidebar-mode
+
+    | '     | wallabag-toggle-sidebar            | Toggle sidebar.           |
+    | <RET> | wallabag-sidebar-find-tag          | Filter by tag at point.   |
+    | r     | wallabag-search-clear-filter       | Clear the filter keyword. |
+    | R     | wallabag-search-clear-filter       | Clear the filter keyword. |
+    | n     | wallabag-sidebar-find-next-tag     | Filter by next tag.       |
+    | p     | wallabag-sidebar-find-previous-tag | Filter by previous tag.   |
+    | q     | wallabag-sidebar-quit              | Quit sidebar.             |
+
+* Change logs
+** =2021-04-13=
+Version *1.0.0*:

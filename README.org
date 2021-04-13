@@ -50,6 +50,8 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 (use-package wallabag
   :defer t
   :load-path "~/.emacs.d/lisp/wallabag/"
+  :init 
+  (autoload 'wallabag "wallabag")
   :config
   (setq wallabag-host "https://xx.xx.com")
   (setq wallabag-username "xx") ;; username

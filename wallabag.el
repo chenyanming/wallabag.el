@@ -346,7 +346,7 @@ TAGS are seperated by comma."
                   (message "Add Entry Done"))))))
 
 (defun wallabag-insert-entry(title tags)
-  "Insert a entry by TITLE and TAGS, using current buffer."
+  "TODO: Insert a entry by TITLE and TAGS, using current buffer."
   (interactive (list
                 (read-from-minibuffer "What TITLE do you want to add? " (buffer-name))
                 (read-from-minibuffer "How about TAGS? ")))

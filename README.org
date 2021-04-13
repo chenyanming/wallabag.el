@@ -35,6 +35,8 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [x] sync with all clients (mobile, web, browser extention etc)
 - [x] Support [[https://github.com/chenyanming/shrface][shrface]]
 - [ ] Advanced filter
+- [ ] Exporting.
+- [ ] Editing.
 
 * Known Bugs
 There is one issue is that entries deletion on other platforms can not sync to emacs, the workaround is doing a full update via ~M-x wallabag-full-update~.

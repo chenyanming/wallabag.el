@@ -56,7 +56,7 @@ git clone https://github.com/wallabag/wallabag.git ~/.emacs.d/lisp/wallabag/
 #+end_src
 
 * Keybindings
-Start with `wallabag`.
+Start with ~wallabag~.
 
 ** wallabag-search-mode
 

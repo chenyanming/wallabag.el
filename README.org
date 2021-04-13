@@ -34,9 +34,11 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [x] Select with Ivy
 - [x] sync with all clients (mobile, web, browser extention etc)
 - [x] Support [[https://github.com/chenyanming/shrface][shrface]]
-- [ ] Advanced filter
+- [ ] Advanced search and filtering
 - [ ] Exporting.
 - [ ] Editing.
+- [ ] Batch Deletion.
+- [ ] Batch Tagging.
 
 * Known Bugs
 There is one issue is that entries deletion on other platforms can not sync to emacs, the workaround is doing a full update via ~M-x wallabag-full-update~.
@@ -94,13 +96,13 @@ Start with ~M-x wallabag~. The first time, you need to press ~u~, then input the
 
     | <RET> | wallabag-view                            | View the wallabag entry.                                             |
     | v     | wallabag-view                            | View the wallabag entry.                                             |
-    | /     | wallabag-search-live-filter              | Filter the ~*wallabag-search*~ buffer.                                   |
+    | /     | wallabag-search-live-filter              | Filter the ~*wallabag-search*~ buffer.                                 |
     | q     | wallabag-search-quit                     | Quit ~*wallabag-entry*~ then ~*wallabag-search*~ and ~*wallabag-sidebar*~. |
     | r     | wallabag-search-refresh-and-clear-filter | Refresh wallabag and clear the filter keyword.                       |
     | R     | wallabag-search-clear-filter             | Clear the filter keyword.                                            |
     | u     | wallabag-search-update-and-clear-filter  | Request entries and clear the filter keyword.                        |
     | m     | wallabag-mark-and-forward                | Mark entry and forward.                                              |
-    | <DEL> | wallabag-unmark-and-backward             | Unmark entry adn backword.                                           |
+    | <DEL> | wallabag-unmark-and-backward             | Unmark entry and backword.                                           |
     | a     | wallabag-add-entry                       | Add an entry.                                                        |
     | d     | wallabag-delete-entry                    | Delete an entry.                                                     |
     | j     | wallabag-next-entry                      | Move to next entry.                                                  |

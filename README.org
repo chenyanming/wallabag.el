@@ -37,7 +37,9 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [ ] Advanced filter
 
 * Known Bugs
-There is one issue is that entries deletion on other platforms can not sync to emacs, you can do ~M-x wallabag-full-update~ to retrive and regenerate the database.
+There is one issue is that entries deletion on other platforms can not sync to emacs, the workaround is doing a full update via ~M-x wallabag-full-update~.
+
+The mobile client also has the same behavior, when deletion performs on web client or wallabag.el, you need to do a full update on mobile.
 
 * Installation and Configuration
 This project relies on [[https://github.com/tkf/emacs-request][emacs-request]] and [[https://github.com/skeeto/emacsql][emacsql]]. Please install them in advanced.

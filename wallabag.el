@@ -156,7 +156,7 @@ When live editing the filter, it is bound to :live.")
 
 (defun wallabag-request-entries(perpage)
   "Request all entries."
-  (interactive (list (read-from-minibuffer "How many article you want to retrieve? ")))
+  (interactive (list (read-from-minibuffer "How many articles you want to retrieve? ")))
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")

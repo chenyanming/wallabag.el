@@ -197,7 +197,7 @@ When live editing the filter, it is bound to :live.")
                   (wallabag-search-keyword-filter ""))))))
 
 (defun wallabag-request-format (&optional format)
-  "Request the format to be exported."
+  "TODO: Request the format to be exported."
   (interactive)
   (let* ((entry (get-text-property (point) 'wallabag-entry nil))
          (id (alist-get 'id entry))

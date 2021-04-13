@@ -6,6 +6,7 @@
 * Table of Contents :TOC_1:noexport:
 - [[#description][Description]]
 - [[#features][Features]]
+- [[#installation-and-configuration][Installation and Configuration]]
 - [[#keybindings][Keybindings]]
 - [[#change-logs][Change logs]]
 
@@ -31,6 +32,26 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [x] Sidebar supported: Tags
 - [x] Select with Ivy
 - [ ] Advanced filter
+
+* Installation and Configuration
+#+begin_src sh
+git clone https://github.com/wallabag/wallabag.git ~/.emacs.d/lisp/wallabag/
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package wallabag
+  :defer t
+  :load-path "~/.emacs.d/lisp/wallabag/"
+  :config
+  (setq wallabag-host "https://xx.xx.com")
+  (setq wallabag-username "xx") ;; username
+  (setq wallabag-password "xx") ;; password
+  (setq wallabag-clientid "xx") ;; created with API clients management
+  (setq wallabag-secret "xx") ;; created with API clients management
+  ;; (setq wallabag-db-file "~/OneDrive/Org/wallabag.sqlite") ;; optional, default is saved to ~/.emacs.d/.cache/wallabag.sqlite
+  ;; (run-with-timer 0 3540 'wallabag-request-token) ;; optional, auto refresh token, token should refresh every hour
+  )
+#+end_src
 
 * Keybindings
 

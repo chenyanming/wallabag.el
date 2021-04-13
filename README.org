@@ -39,7 +39,7 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 This project relies on [[https://github.com/tkf/emacs-request][emacs-request]] and [[https://github.com/skeeto/emacsql][emacsql]].
 
 #+begin_src sh
-git clone https://github.com/wallabag/wallabag.git ~/.emacs.d/lisp/wallabag/
+git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallabag/
 #+end_src
 
 #+begin_src emacs-lisp

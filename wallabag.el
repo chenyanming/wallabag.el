@@ -7,7 +7,7 @@
 ;; Keywords: tools
 ;; Created: 13 April 2021
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "25.1") (request "0.3.3"))
+;; Package-Requires: ((emacs "25.1") (request "0.3.3") (emacsql "3.0.0"))
 
 ;; This file is NOT part of GNU Emacs.
 

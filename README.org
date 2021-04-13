@@ -36,6 +36,8 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [ ] Advanced filter
 
 * Installation and Configuration
+This project relies on [[https://github.com/tkf/emacs-request][emacs-request]] and [[https://github.com/skeeto/emacsql][emacsql]].
+
 #+begin_src sh
 git clone https://github.com/wallabag/wallabag.git ~/.emacs.d/lisp/wallabag/
 #+end_src

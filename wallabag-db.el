@@ -152,7 +152,7 @@
 (defun wallabag-db-insert (entries)
   (let ((entries
          (cl-loop for entry in entries collect
-                  (map 'array #'identity (mapcar 'cdr entry)))))
+                  (cl-map 'array #'identity (mapcar 'cdr entry)))))
     (wallabag-db-sql `[:insert :or :ignore :into items
                     :values ,entries])))
 ;; delete

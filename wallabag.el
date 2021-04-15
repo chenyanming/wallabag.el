@@ -491,33 +491,22 @@ TAGS are seperated by comma."
 
 ;;; wallabag-search-mode
 
-(define-derived-mode wallabag-search-mode fundamental-mode "wallabag-search"
-  "Major mode for listing wallabag entries.
-\\{wallabag-search-mode-map}"
-  (setq truncate-lines t
-        buffer-read-only t
-        header-line-format '(:eval (funcall wallabag-search-header-function)))
-  (buffer-disable-undo)
-  (set (make-local-variable 'hl-line-face) 'wallabag-current-match)
-  (hl-line-mode)
-  (add-hook 'minibuffer-setup-hook 'wallabag-search--minibuffer-setup))
-
 (defvar wallabag-search-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<RET>") #'wallabag-view)
     (define-key map "v" #'wallabag-view)
-    (define-key map "/" #'wallabag-search-live-filter)
+    (define-key map "s" #'wallabag-search-live-filter)
     (define-key map "q" #'wallabag-search-quit)
-    (define-key map "r" #'wallabag-search-refresh-and-clear-filter)
-    (define-key map "R" #'wallabag-search-clear-filter)
+    (define-key map "g" #'wallabag-search-refresh-and-clear-filter)
+    (define-key map "G" #'wallabag-search-clear-filter)
     (define-key map "u" #'wallabag-search-update-and-clear-filter)
     (define-key map "m" #'wallabag-mark-and-forward)
     (define-key map (kbd "<DEL>") #'wallabag-unmark-and-backward)
     (define-key map "a" #'wallabag-add-entry)
     (define-key map "d" #'wallabag-delete-entry)
-    (define-key map "j" #'wallabag-next-entry)
-    (define-key map "k" #'wallabag-previous-entry)
-    (define-key map "y" #'wallabag-org-link-copy)
+    (define-key map "n" #'wallabag-next-entry)
+    (define-key map "p" #'wallabag-previous-entry)
+    (define-key map "w" #'wallabag-org-link-copy)
     (define-key map "t" #'wallabag-add-tags)
     (define-key map "T" #'wallabag-remove-tag)
     (define-key map "'" #'wallabag-toggle-sidebar)
@@ -525,7 +514,7 @@ TAGS are seperated by comma."
   "Keymap for `wallabag-search-mode'.")
 
 (if (featurep 'evil)
-    (evil-define-key 'normal wallabag-search-mode-map
+    (evil-define-key '(normal emacs) wallabag-search-mode-map
       (kbd "<RET>") 'wallabag-view
       (kbd "v") 'wallabag-view
       (kbd "/") 'wallabag-search-live-filter
@@ -543,6 +532,17 @@ TAGS are seperated by comma."
       (kbd "t") 'wallabag-add-tags
       (kbd "T") 'wallabag-remove-tag
       (kbd "'") 'wallabag-toggle-sidebar))
+
+(define-derived-mode wallabag-search-mode fundamental-mode "wallabag-search"
+  "Major mode for listing wallabag entries.
+\\{wallabag-search-mode-map}"
+  (setq truncate-lines t
+        buffer-read-only t
+        header-line-format '(:eval (funcall wallabag-search-header-function)))
+  (buffer-disable-undo)
+  (set (make-local-variable 'hl-line-face) 'wallabag-current-match)
+  (hl-line-mode)
+  (add-hook 'minibuffer-setup-hook 'wallabag-search--minibuffer-setup))
 
 (defun wallabag-search-buffer ()
   "Create buffer *wallabag-search*."
@@ -749,12 +749,6 @@ Argument EVENT mouse event."
 
 ;;; wallabag-entry-mode
 
-(define-derived-mode wallabag-entry-mode fundamental-mode "wallabag-entry"
-  "Mode for displaying wallabag entry details.
-\\{wallabag-show-mode-map}"
-  (setq buffer-read-only t)
-  (buffer-disable-undo))
-
 (defvar wallabag-entry-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "q" #'wallabag-entry-quit)
@@ -762,8 +756,14 @@ Argument EVENT mouse event."
   "Keymap for `wallabag-entry-mode'.")
 
 (if (featurep 'evil)
-    (evil-define-key 'normal wallabag-entry-mode-map
-  (kbd "q") 'wallabag-entry-quit))
+    (evil-define-key '(normal emacs) wallabag-entry-mode-map
+      (kbd "q") 'wallabag-entry-quit))
+
+(define-derived-mode wallabag-entry-mode fundamental-mode "wallabag-entry"
+  "Mode for displaying wallabag entry details.
+\\{wallabag-show-mode-map}"
+  (setq buffer-read-only t)
+  (buffer-disable-undo))
 
 (defun wallabag-show--buffer-name ()
   "Return the appropriate buffer name for wallabag entry."
@@ -880,14 +880,6 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
   :safe 'booleanp
   :group 'wallabag-sidebar)
 
-(define-derived-mode wallabag-sidebar-mode
-  special-mode "Wallabag Sidebar"
-  "Major mode for working with `wallabag' projects."
-  (face-remap-add-relative 'default 'wallabag-sidebar-face)
-  ;; (add-hook 'post-command-hook #'wallabag-sidebar-sync-notes t t)
-
-  )
-
 (defvar wallabag-sidebar-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "'" #'wallabag-toggle-sidebar)
@@ -901,14 +893,22 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
   "Keymap for `wallabag-sidebar-mode'.")
 
 (if (featurep 'evil)
-    (evil-define-key 'normal wallabag-sidebar-mode-map
+    (evil-define-key '(normal emacs) wallabag-sidebar-mode-map
       (kbd "'") 'wallabag-toggle-sidebar
       (kbd "<RET>") 'wallabag-sidebar-find-tag
-      (kbd "r") 'wallabag-search-clear-filter
-      (kbd "R") 'wallabag-search-clear-filter
+      (kbd "g") 'wallabag-search-clear-filter
+      (kbd "G") 'wallabag-search-clear-filter
       (kbd "n") 'wallabag-sidebar-find-next-tag
       (kbd "p") 'wallabag-sidebar-find-previous-tag
       (kbd "q") 'wallabag-sidebar-quit))
+
+(define-derived-mode wallabag-sidebar-mode
+  special-mode "Wallabag Sidebar"
+  "Major mode for working with `wallabag' projects."
+  (face-remap-add-relative 'default 'wallabag-sidebar-face)
+  ;; (add-hook 'post-command-hook #'wallabag-sidebar-sync-notes t t)
+
+  )
 
 (defun wallabag-sidebar-create-buffer ()
   "Return wallabag sidebar buffer for DIRECTORY."

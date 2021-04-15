@@ -192,7 +192,7 @@ When live editing the filter, it is bound to :live.")
                                            ;; return entry
                                            entry)))
                   (wallabag-db-insert entries)
-                  (message "Retrived %s articles." perpage)
+                  (message "Retrived %s articles." (length entries))
                   (wallabag)
                   (wallabag-search-keyword-filter ""))))))
 

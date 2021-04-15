@@ -113,7 +113,7 @@ Start with ~M-x wallabag~. The first time, you need to press ~u~, then input the
     | '                      | wallabag-toggle-sidebar                  | Toggle sidebar.                                                      |
 
 ** wallabag-entry-mode
-    | q       | wallabag-entry-quit | Quit **wallabag-entry**. |
+    | q       | wallabag-entry-quit | Quit ~*wallabag-entry*~.  |
     | mouse-1 | wallabag-mouse-1    | Browse the url.        |
     | ret     | wallabag-ret        | Browse the url.        |
 

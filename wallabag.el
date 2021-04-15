@@ -884,8 +884,8 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
   (let ((map (make-sparse-keymap)))
     (define-key map "'" #'wallabag-toggle-sidebar)
     (define-key map "<RET>" #'wallabag-sidebar-find-tag)
-    (define-key map "r" #'wallabag-search-clear-filter)
-    (define-key map "R" #'wallabag-search-clear-filter)
+    (define-key map "g" #'wallabag-search-clear-filter)
+    (define-key map "G" #'wallabag-search-clear-filter)
     (define-key map "n" #'wallabag-sidebar-find-next-tag)
     (define-key map "p" #'wallabag-sidebar-find-previous-tag)
     (define-key map "q" #'wallabag-sidebar-quit)
@@ -896,8 +896,8 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
     (evil-define-key '(normal emacs) wallabag-sidebar-mode-map
       (kbd "'") 'wallabag-toggle-sidebar
       (kbd "<RET>") 'wallabag-sidebar-find-tag
-      (kbd "g") 'wallabag-search-clear-filter
-      (kbd "G") 'wallabag-search-clear-filter
+      (kbd "r") 'wallabag-search-clear-filter
+      (kbd "R") 'wallabag-search-clear-filter
       (kbd "n") 'wallabag-sidebar-find-next-tag
       (kbd "p") 'wallabag-sidebar-find-previous-tag
       (kbd "q") 'wallabag-sidebar-quit))

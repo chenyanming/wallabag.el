@@ -155,7 +155,7 @@ When live editing the filter, it is bound to :live.")
 
 
 (defun wallabag-request-entries(perpage)
-  "Request all entries."
+  "Request PERPAGE entries, entries that do not exist in the server will be deleted."
   (interactive (list (read-from-minibuffer "How many articles you want to retrieve? ")))
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
@@ -191,6 +191,13 @@ When live editing the filter, it is bound to :live.")
                                              (wallabag-convert-tags-to-tag entry)) entry)
                                            ;; return entry
                                            entry)))
+                  ;; delete the non exist entries replied from wallabag server
+                  (wallabag-db-delete (vconcat (cl-set-difference
+                                                (cl-loop for item in (wallabag-db-sql `[:select id :from items :order :by id :desc :limit ,perpage]) collect
+                                                         (car item))
+                                                (cl-loop for entry in entries collect
+                                                         (alist-get 'id entry)))))
+                  ;; insert new entries retried from wallabag server
                   (wallabag-db-insert entries)
                   (message "Retrived %s articles." (length entries))
                   (wallabag)

@@ -156,9 +156,13 @@
     (wallabag-db-sql `[:insert :or :ignore :into items
                     :values ,entries])))
 ;; delete
-(defun wallabag-db-delete (id)
-  (wallabag-db-sql `[:delete :from items
-                  :where (= id ,id)]))
+(defun wallabag-db-delete (ids)
+  (cond ((vectorp ids)
+         (wallabag-db-sql `[:delete :from items
+                            :where (in id ,ids)]) )
+        ((numberp ids) (wallabag-db-sql `[:delete :from items
+                                          :where (= id ,ids)]))
+        (t nil)))
 
 ;; update
 (defmacro wallabag-db-update (field)

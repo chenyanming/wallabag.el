@@ -113,6 +113,12 @@
   :group 'wallabag
   :type 'boolean)
 
+
+(defcustom wallabag-number-of-entries-to-be-retrieved 50
+  "Number of entries to be retrieved when run `wallabag-request-entries'."
+  :group 'wallabag
+  :type 'integer)
+
 (defvar wallabag-full-entries nil
   "List of the all entries currently on database.")
 
@@ -130,6 +136,17 @@ When live editing the filter, it is bound to :live.")
   "Function to print entries into the *wallabag-search* buffer.")
 
 (defvar wallabag-all-tags nil)
+
+(defvar wallabag-new-databasep nil)
+
+(defvar wallabag-appname nil)
+(defvar wallabag-version nil)
+(defvar wallabag-allowed-registration nil)
+
+(defvar wallabag-user-id nil)
+(defvar wallabag-user-email nil)
+(defvar wallabag-user-created-at nil)
+(defvar wallabag-user-updated-at nil)
 
 ;;; requests
 
@@ -153,16 +170,60 @@ When live editing the filter, it is bound to :live.")
                   (setq token (assoc-default 'access_token data) ))))
     (setq wallabag-token token)))
 
+(defun wallabag-request-server-info ()
+  "Request the wallabag server info."
+  (interactive)
+  (let* ((host wallabag-host)
+         (token (or wallabag-token (wallabag-request-token))))
+    (request (format "%s/api/info.json" host)
+      :parser 'json-read
+      :params `(("access_token" . ,token))
+      :headers '(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
+      :error
+      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
+                     ;; one of error is token expires
+                     (setq wallabag-token nil)))
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  (setq wallabag-appname (assoc-default 'appname data))
+                  (setq wallabag-version (alist-get 'version data))
+                  (setq wallabag-allowed-registration (alist-get 'allowed_registration data))
+                  (message "Request Server Info Done."))))))
+
+(defun wallabag-request-user-info ()
+  "Request the wallabag user info."
+  (interactive)
+  (let* ((host wallabag-host)
+         (token (or wallabag-token (wallabag-request-token))))
+    (request (format "%s/api/user.json" host)
+      :parser 'json-read
+      :params `(("access_token" . ,token))
+      :headers '(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
+      :error
+      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
+                     ;; one of error is token expires
+                     (setq wallabag-token nil)))
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  (setq wallabag-user-id (assoc-default 'id data))
+                  (setq wallabag-user-email (assoc-default 'email data))
+                  (setq wallabag-user-created-at (assoc-default 'created_at data))
+                  (setq wallabag-user-updated-at (assoc-default 'updated_at data))
+                  (message "Request User Info Done."))))))
 
 (defun wallabag-request-entries(perpage)
   "Request PERPAGE entries, entries that do not exist in the server will be deleted."
-  (interactive (list (read-from-minibuffer "How many articles you want to retrieve? ")))
+  (interactive (list (if wallabag-new-databasep
+                         (let ((num (read-from-minibuffer "How many articles you want to retrieve? ")))
+                           (if (= (string-to-number (or num "0")) 0)
+                               wallabag-number-of-entries-to-be-retrieved
+                             (string-to-number num)) )
+                       wallabag-number-of-entries-to-be-retrieved)))
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
-        (page 1)
-        (perpage (if (= (string-to-number (or perpage "0")) 0) 10 (string-to-number perpage))))
+        (page 1))
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -199,7 +260,8 @@ When live editing the filter, it is bound to :live.")
                                                          (alist-get 'id entry)))))
                   ;; insert new entries retried from wallabag server
                   (wallabag-db-insert entries)
-                  (message "Retrived %s articles." (length entries))
+                  (setq wallabag-new-databasep nil)
+                  (message "Retrived the latest %s articles." (length entries))
                   (wallabag)
                   (wallabag-search-keyword-filter ""))))))
 
@@ -1099,6 +1161,7 @@ ARGUMENT FILTER is the filter string."
       (when (yes-or-no-p (format "Are you want to perform full update?"))
         (emacsql-close (wallabag-db))
         (delete-file wallabag-db-file)
+        (setq wallabag-new-databasep t)
         (wallabag-search-update-and-clear-filter))))
 
 (provide 'wallabag)

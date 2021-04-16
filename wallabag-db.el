@@ -146,6 +146,7 @@
     (if candidates
         candidates
       (message "No items in wallabag database, try to update with 'u'.")
+      (setq wallabag-new-databasep t)
       nil)))
 
 ;; insert

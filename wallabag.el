@@ -890,7 +890,7 @@ Argument EVENT mouse event."
 
 (define-derived-mode wallabag-entry-mode fundamental-mode "wallabag-entry"
   "Mode for displaying wallabag entry details.
-\\{wallabag-show-mode-map}"
+\\{wallabag-entry-mode-map}"
   (setq buffer-read-only t)
   (buffer-disable-undo))
 
@@ -901,7 +901,7 @@ Argument EVENT mouse event."
 (defun wallabag-show-entry (entry &optional switch html)
   "Display ENTRY in the current buffer.
 Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
-  (unless (eq major-mode 'wallabag-show-mode)
+  (unless (eq major-mode 'wallabag-entry-mode)
       (when (get-buffer (wallabag-show--buffer-name))
         (kill-buffer (wallabag-show--buffer-name))))
   (let* ((buff (get-buffer-create (wallabag-show--buffer-name)))

@@ -271,7 +271,7 @@ When live editing the filter, it is bound to :live.")
 
                   (with-silent-modifications
                     (wallabag-request-tags)
-                    (with-current-buffer (get-buffer-create (wallabag-search-buffer))
+                    (with-current-buffer (wallabag-search-buffer)
                       (setq wallabag-search-filter "")
                       (setq current (point))
                       (setq position (window-start))
@@ -499,6 +499,32 @@ TAGS are seperated by comma."
                       (wallabag-search-refresh-and-clear-filter)
                       (message "Deletion Done")))))))
 
+(defun wallabag-original-entry()
+  "Show entry rendered with original html."
+  (interactive)
+  (let ((url (alist-get 'url (get-text-property (point-min) 'wallabag-entry nil))))
+    (request url
+      :parser 'buffer-string
+      :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
+      :error
+      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)))
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  (wallabag-show-entry
+                   (or
+                    (get-text-property (point) 'wallabag-entry nil)
+                    (get-text-property (point-min) 'wallabag-entry nil)) nil data))))))
+
+(defun wallabag-browse-url()
+  "Browser entry with original url."
+  (interactive)
+  (browse-url
+   (alist-get
+    'url
+    (or
+     (get-text-property (point) 'wallabag-entry nil)
+     (get-text-property (point-min) 'wallabag-entry nil)) )))
+
 ;; (defun wallabag-search-entries (query)
 ;;   (or
 ;;    (ivy-more-chars)
@@ -589,6 +615,8 @@ TAGS are seperated by comma."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<RET>") #'wallabag-view)
     (define-key map "v" #'wallabag-view)
+    (define-key map "V" #'wallabag-browse-url)
+    (define-key map "o" #'wallabag-original-entry)
     (define-key map "s" #'wallabag-search-live-filter)
     (define-key map "q" #'wallabag-search-quit)
     (define-key map "g" #'wallabag-search-refresh-and-clear-filter)
@@ -611,6 +639,8 @@ TAGS are seperated by comma."
     (evil-define-key '(normal emacs) wallabag-search-mode-map
       (kbd "<RET>") 'wallabag-view
       (kbd "v") 'wallabag-view
+      (kbd "V") 'wallabag-browse-url
+      (kbd "o") 'wallabag-original-entry
       (kbd "/") 'wallabag-search-live-filter
       (kbd "q") 'wallabag-search-quit
       (kbd "r") 'wallabag-search-refresh-and-clear-filter
@@ -696,7 +726,8 @@ Argument EVENT mouse event."
 (defun wallabag-view ()
   "View the wallabag entry."
   (interactive)
-  (wallabag-show-entry (get-text-property (point) 'wallabag-entry nil)))
+  (wallabag-show-entry (or (get-text-property (point) 'wallabag-entry nil)
+                           (get-text-property (point-min) 'wallabag-entry nil))))
 
 (defun wallabag-parse-entry-as-string (entry)
   "Parse the wallabag ENTRY and return as string."
@@ -844,11 +875,17 @@ Argument EVENT mouse event."
 (defvar wallabag-entry-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "q" #'wallabag-entry-quit)
+    (define-key map "v" #'wallabag-view)
+    (define-key map "V" #'wallabag-browse-url)
+    (define-key map "o" #'wallabag-original-entry)
     map)
   "Keymap for `wallabag-entry-mode'.")
 
 (if (featurep 'evil)
     (evil-define-key '(normal emacs) wallabag-entry-mode-map
+      (kbd "v") 'wallabag-view
+      (kbd "V") 'wallabag-browse-url
+      (kbd "o") 'wallabag-original-entry
       (kbd "q") 'wallabag-entry-quit))
 
 (define-derived-mode wallabag-entry-mode fundamental-mode "wallabag-entry"
@@ -861,7 +898,7 @@ Argument EVENT mouse event."
   "Return the appropriate buffer name for wallabag entry."
   "*wallabag-entry*")
 
-(defun wallabag-show-entry (entry &optional switch)
+(defun wallabag-show-entry (entry &optional switch html)
   "Display ENTRY in the current buffer.
 Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
   (unless (eq major-mode 'wallabag-show-mode)
@@ -874,7 +911,7 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
          (created-at (alist-get 'created_at entry))
          (tag (alist-get 'tag entry))
          (domain-name (or (alist-get 'domain_name entry) ""))
-         (content (or (alist-get 'content entry) ""))
+         (content (or html (alist-get 'content entry) ""))
          (url (alist-get 'url entry))
          beg end)
     (let ((inhibit-read-only t))

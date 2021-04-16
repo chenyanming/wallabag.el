@@ -148,6 +148,8 @@ When live editing the filter, it is bound to :live.")
 (defvar wallabag-user-created-at nil)
 (defvar wallabag-user-updated-at nil)
 
+(defvar wallabag-retrievingp nil)
+
 ;;; requests
 
 (defun wallabag-request-token ()
@@ -219,11 +221,14 @@ When live editing the filter, it is bound to :live.")
                                wallabag-number-of-entries-to-be-retrieved
                              (string-to-number num)) )
                        wallabag-number-of-entries-to-be-retrieved)))
+  ;; indicate it is retrieving.
+  (setq wallabag-retrievingp t)
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
-        (page 1))
+        (page 1)
+        current)
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -262,8 +267,23 @@ When live editing the filter, it is bound to :live.")
                   (wallabag-db-insert entries)
                   (setq wallabag-new-databasep nil)
                   (message "Retrived the latest %s articles." (length entries))
-                  (wallabag)
-                  (wallabag-search-keyword-filter ""))))))
+
+                  (with-silent-modifications
+                    (wallabag-request-tags)
+                    (with-current-buffer (get-buffer-create (wallabag-search-buffer))
+                      (setq wallabag-search-filter "")
+                      (setq current (point))
+                      (erase-buffer)
+                      (setq wallabag-search-entries (nreverse (wallabag-db-select)))
+                      (setq wallabag-full-entries wallabag-search-entries)
+                      (unless (equal wallabag-full-entries '(""))   ; not empty list
+                        (cl-loop for entry in wallabag-full-entries do
+                                 (funcall wallabag-search-print-entry-function entry)))
+                      (wallabag-search-mode)
+                      (goto-char current)))
+
+                  ;; indicate the retrieving is finished, and update the header
+                  (setq wallabag-retrievingp nil))))))
 
 (defun wallabag-request-format (&optional format)
   "TODO: Request the format to be exported."
@@ -547,10 +567,12 @@ TAGS are seperated by comma."
           (propertize "Wallabag" 'face font-lock-preprocessor-face)
           (propertize (format "%s" wallabag-host) 'face font-lock-type-face)
           (concat
-           (propertize (format "Total: %s"
-                               (if (equal wallabag-search-entries '(""))
-                                   "0   "
-                                 (concat (number-to-string (length wallabag-search-entries)) "   "))) 'face font-lock-warning-face)
+           (if wallabag-retrievingp
+               (propertize "Updating..." 'face font-lock-warning-face)
+               (propertize (format "Total: %s"
+                                   (if (equal wallabag-search-entries '(""))
+                                       "0   "
+                                     (concat (number-to-string (length wallabag-search-entries)) "   "))) 'face font-lock-warning-face) )
            (propertize (format "%s" (if (equal wallabag-search-filter "")
                                         ""
                                       (concat wallabag-search-filter "   "))) 'face font-lock-keyword-face)
@@ -811,8 +833,6 @@ Argument EVENT mouse event."
 (defun wallabag-search-update-and-clear-filter ()
   "Refresh wallabag and clear the filter keyword."
   (interactive)
-  (setq wallabag-search-entries nil)
-  (setq wallabag-full-entries nil)
   (call-interactively 'wallabag-request-entries)
   (message "Retriving articles from wallabag host %s ..." wallabag-host))
 

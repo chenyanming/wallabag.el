@@ -228,7 +228,8 @@ When live editing the filter, it is bound to :live.")
         (sort "created")
         (order "desc")
         (page 1)
-        current)
+        current
+        position)
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -273,6 +274,7 @@ When live editing the filter, it is bound to :live.")
                     (with-current-buffer (get-buffer-create (wallabag-search-buffer))
                       (setq wallabag-search-filter "")
                       (setq current (point))
+                      (setq position (window-start))
                       (erase-buffer)
                       (setq wallabag-search-entries (nreverse (wallabag-db-select)))
                       (setq wallabag-full-entries wallabag-search-entries)
@@ -280,6 +282,7 @@ When live editing the filter, it is bound to :live.")
                         (cl-loop for entry in wallabag-full-entries do
                                  (funcall wallabag-search-print-entry-function entry)))
                       (wallabag-search-mode)
+                      (set-window-start (selected-window) position)
                       (goto-char current)))
 
                   ;; indicate the retrieving is finished, and update the header

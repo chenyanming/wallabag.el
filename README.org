@@ -82,16 +82,17 @@ Afterwards, the number of entries is controlled by ~wallabag-number-of-entries-t
 
 PS: 
 1. Network quality impacts the retrieving time. Keep ~wallabag-number-of-entries-to-be-retrieved~ as small as possible to decrease the retrieving time.
-2. The synchronization algorithm is still on development, if you want the keep local database always updated, please use ~wallabag-full-update~.
+2. The synchronization algorithm is still on development, if you want to keep local database always updated, please use ~wallabag-full-update~.
 3. ~wallabag-full-update~ will always ask you to input the number of entries you want to retrieve.
 
 ** Functions can be used outside wallabag related modes
-| wallabag               | Enter ~*wallabag-search*~ buffer.                                                                        |
-| wallabag-find          | Select wallabag entries from a list with ivy.                                                          |
-| wallabag-full-update   | Perform a full database update. It can always keep the local database updated.                         |
-| wallabag-request-token | Request a new token.                                                                                   |
-| wallabag-add-entry     | Add one entry to wallabag server, with URL and TAGS                                                    |
-| wallabag-insert-entry  | Insert an entry to wallabag server with current buffer content (behavior may be changed in the future) |
+| wallabag                 | Enter ~*wallabag-search*~ buffer.                                                                        |
+| wallabag-find            | Select wallabag entries from a list with ivy.                                                          |
+| wallabag-full-update     | Perform a full database update. It can always keep the local database updated.                         |
+| wallabag-request-token   | Request a new token.                                                                                   |
+| wallabag-add-entry       | Add one entry to wallabag server, with URL and TAGS                                                    |
+| wallabag-insert-entry    | Insert an entry to wallabag server with current buffer content (behavior may be changed in the future) |
+| wallabag-request-entries | Retrieve the latest ~wallabag-number-of-entries-to-be-retrieved~ entries in the background.              |
 
 ** wallabag-search-mode
 

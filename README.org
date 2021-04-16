@@ -6,7 +6,6 @@
 * Table of Contents :TOC_1:noexport:
 - [[#description][Description]]
 - [[#features][Features]]
-- [[#known-bugs][Known Bugs]]
 - [[#installation-and-configuration][Installation and Configuration]]
 - [[#keybindings][Keybindings]]
 - [[#change-logs][Change logs]]
@@ -39,11 +38,6 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [ ] Editing.
 - [ ] Batch Deletion.
 - [ ] Batch Tagging.
-
-* Known Bugs
-There is one issue is that entries deletion on other platforms can not sync to emacs, the workaround is doing a full update via ~M-x wallabag-full-update~.
-
-The mobile client also has the same behavior, when deletion performs on web client or wallabag.el, you need to do a full update on mobile.
 
 * Installation and Configuration
 This project relies on [[https://github.com/tkf/emacs-request][emacs-request]] and [[https://github.com/skeeto/emacsql][emacsql]]. Please install them in advanced.
@@ -83,15 +77,18 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 
 * Keybindings
 Start with ~M-x wallabag~. 
-For new database, you need to press ~u~, then input the number of articles you want to retrieve from the server.
-For old database, the number of entries to be retrieved/updated is controlled by ~wallabag-number-of-entries-to-be-retrieved~, default is 50. 
+For the first time you connect to server, you need to press ~u~, then input the number of articles you want to retrieve from the server.
+Afterwards, the number of entries is controlled by ~wallabag-number-of-entries-to-be-retrieved~, default is 50. 
 
-PS: Due to the network quality, the retrieving time varies. Keep ~wallabag-number-of-entries-to-be-retrieved~ as small as possible to decrease the retrieving time.
+PS: 
+1. Network quality impacts the retrieving time. Keep ~wallabag-number-of-entries-to-be-retrieved~ as small as possible to decrease the retrieving time.
+2. The synchronization algorithm is still on development, if you want the keep local database always updated, please use ~wallabag-full-update~.
+3. ~wallabag-full-update~ will always ask you to input the number of entries you want to retrieve.
 
 ** Functions can be used outside wallabag related modes
 | wallabag               | Enter ~*wallabag-search*~ buffer.                                                                        |
 | wallabag-find          | Select wallabag entries from a list with ivy.                                                          |
-| wallabag-full-update   | Perform a full database update.                                                                        |
+| wallabag-full-update   | Perform a full database update. It can always keep the local database updated.                         |
 | wallabag-request-token | Request a new token.                                                                                   |
 | wallabag-add-entry     | Add one entry to wallabag server, with URL and TAGS                                                    |
 | wallabag-insert-entry  | Insert an entry to wallabag server with current buffer content (behavior may be changed in the future) |

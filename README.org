@@ -82,7 +82,11 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 #+end_src
 
 * Keybindings
-Start with ~M-x wallabag~. The first time, you need to press ~u~, then input the number of articles you want to retrieve from the server.
+Start with ~M-x wallabag~. 
+For new database, you need to press ~u~, then input the number of articles you want to retrieve from the server.
+For old database, the number of entries to be retrieved/updated is controlled by ~wallabag-number-of-entries-to-be-retrieved~, default is 50. 
+
+PS: Due to the network quality, the retrieving time varies. Keep ~wallabag-number-of-entries-to-be-retrieved~ as small as possible to decrease the retrieving time.
 
 ** Functions can be used outside wallabag related modes
 | wallabag               | Enter ~*wallabag-search*~ buffer.                                                                        |

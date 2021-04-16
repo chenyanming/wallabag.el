@@ -96,28 +96,33 @@ PS:
 
 ** wallabag-search-mode
 
-    | <RET>                  | wallabag-view                            | View the wallabag entry.                                             |
-    | v                      | wallabag-view                            | View the wallabag entry.                                             |
-    | s (non-evil), /(evil)  | wallabag-search-live-filter              | Filter the ~*wallabag-search*~ buffer.                                 |
-    | q                      | wallabag-search-quit                     | Quit ~*wallabag-entry*~ then ~*wallabag-search*~ and ~*wallabag-sidebar*~. |
-    | g (non-evil), r(evil)  | wallabag-search-refresh-and-clear-filter | Refresh wallabag and clear the filter keyword.                       |
-    | G (non-evil), R(evil)  | wallabag-search-clear-filter             | Clear the filter keyword.                                            |
-    | u                      | wallabag-search-update-and-clear-filter  | Request entries and clear the filter keyword.                        |
-    | m                      | wallabag-mark-and-forward                | Mark entry and forward.                                              |
-    | <DEL>                  | wallabag-unmark-and-backward             | Unmark entry and backword.                                           |
-    | a                      | wallabag-add-entry                       | Add an entry.                                                        |
-    | d                      | wallabag-delete-entry                    | Delete an entry.                                                     |
-    | n(non-evil), j(evil)   | wallabag-next-entry                      | Move to next entry.                                                  |
-    | p(non-evil), k(evil)   | wallabag-previous-entry                  | Move to previous entry.                                              |
-    | w(non-evil), y(evil)   | wallabag-org-link-copy                   | Copy marked entries as org links.                                    |
-    | t                      | wallabag-add-tags                        | Add tags (seperated by comma) to entry at point.                     |
-    | T                      | wallabag-remove-tag                      | Remove one tag from list.                                            |
-    | '                      | wallabag-toggle-sidebar                  | Toggle sidebar.                                                      |
+    | <RET>                 | wallabag-view                            | View the wallabag entry.                                             |
+    | v                     | wallabag-view                            | View the wallabag entry.                                             |
+    | V                     | wallabag-browse-url                      | Browse the url of current wallabag entry.                            |
+    | o                     | wallabag-original-entry                  | Open the original html rendered wallabag entry.                      |
+    | s (non-evil), /(evil) | wallabag-search-live-filter              | Filter the ~*wallabag-search*~ buffer.                                 |
+    | q                     | wallabag-search-quit                     | Quit ~*wallabag-entry*~ then ~*wallabag-search*~ and ~*wallabag-sidebar*~. |
+    | g (non-evil), r(evil) | wallabag-search-refresh-and-clear-filter | Refresh wallabag and clear the filter keyword.                       |
+    | G (non-evil), R(evil) | wallabag-search-clear-filter             | Clear the filter keyword.                                            |
+    | u                     | wallabag-search-update-and-clear-filter  | Request entries and clear the filter keyword.                        |
+    | m                     | wallabag-mark-and-forward                | Mark entry and forward.                                              |
+    | <DEL>                 | wallabag-unmark-and-backward             | Unmark entry and backword.                                           |
+    | a                     | wallabag-add-entry                       | Add an entry.                                                        |
+    | d                     | wallabag-delete-entry                    | Delete an entry.                                                     |
+    | n(non-evil), j(evil)  | wallabag-next-entry                      | Move to next entry.                                                  |
+    | p(non-evil), k(evil)  | wallabag-previous-entry                  | Move to previous entry.                                              |
+    | w(non-evil), y(evil)  | wallabag-org-link-copy                   | Copy marked entries as org links.                                    |
+    | t                     | wallabag-add-tags                        | Add tags (seperated by comma) to entry at point.                     |
+    | T                     | wallabag-remove-tag                      | Remove one tag from list.                                            |
+    | '                     | wallabag-toggle-sidebar                  | Toggle sidebar.                                                      |
 
 ** wallabag-entry-mode
-    | q       | wallabag-entry-quit | Quit ~*wallabag-entry*~.  |
-    | mouse-1 | wallabag-mouse-1    | Browse the url.        |
-    | ret     | wallabag-ret        | Browse the url.        |
+    | v       | wallabag-view           | View the wallabag entry.                        |
+    | V       | wallabag-browse-url     | Browse the url of current wallabag entry.       |
+    | o       | wallabag-original-entry | Open the original html rendered wallabag entry. |
+    | q       | wallabag-entry-quit     | Quit ~*wallabag-entry*~.                          |
+    | mouse-1 | wallabag-mouse-1        | Browse the url.                                 |
+    | ret     | wallabag-ret            | Browse the url.                                 |
 
 ** wallabag-sidebar-mode
 

@@ -38,6 +38,7 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [ ] Editing.
 - [ ] Batch Deletion.
 - [ ] Batch Tagging.
+- [ ] Annotation
 
 * Installation and Configuration
 This project relies on [[https://github.com/tkf/emacs-request][emacs-request]] and [[https://github.com/skeeto/emacsql][emacsql]]. Please install them in advanced.

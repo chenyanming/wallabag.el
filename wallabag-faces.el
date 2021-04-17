@@ -5,7 +5,8 @@
      :background "#D8DEE9" :extend t)
     (((class color) (background dark))
      :background "#272c35" :extend t))
-  "Face used by Ivy for highlighting the current match.")
+  "Face used by Ivy for highlighting the current match."
+  :group 'wallabag-faces)
 
 (defface wallabag-id-face
   '((((class color) (background light))
@@ -64,12 +65,32 @@
   "Face for the mark candidate."
   :group 'wallabag-faces)
 
-(defface wallabag-sidebar-face
-  '((t nil))
-  "Default base-level face for `wallabag-sidebar-mode' buffers.")
+(defface wallabag-sidebar-face '((t nil))
+  "Default base-level face for `wallabag-sidebar-mode' buffers."
+  :group 'wallabag-faces)
 
 (defface wallabag-org-link '((t :inherit link :foreground "#94b533"))
   "Face for links."
-  :group 'org-faces)
+  :group 'wallabag-faces)
+
+(defface wallabag-archive-face
+  '((((class color) (background light))
+     :foreground "grey"
+     :weight light)
+    (((class color) (background dark))
+     :foreground "dim grey"
+     :weight light)
+    (t :inherit default))
+  "Face used for archive."
+  :group 'wallabag-faces)
+
+(defface wallabag-starred-face
+  '((((class color) (background light))
+     :foreground "black")
+    (((class color) (background dark))
+     :foreground "yellow")
+    (t :inherit default))
+  "Face used for title."
+  :group 'wallabag-faces)
 
 (provide 'wallabag-faces)

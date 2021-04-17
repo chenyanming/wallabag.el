@@ -119,6 +119,12 @@
   :group 'wallabag
   :type 'integer)
 
+
+(defcustom wallabag-starred-icon "★"
+  "The starred icon."
+  :group 'wallabag
+  :type 'string)
+
 (defvar wallabag-full-entries nil
   "List of the all entries currently on database.")
 
@@ -799,20 +805,36 @@ Argument EVENT mouse event."
 
 (defun wallabag-parse-entry-as-string (entry)
   "Parse the wallabag ENTRY and return as string."
-  (let ((title (or (alist-get 'title entry) "NO TITLE"))
-        (created-at (alist-get 'created_at entry))
-        (reading-time (alist-get 'reading_time entry))
-        (tag (alist-get 'tag entry))
-        (domain-name (or (alist-get 'domain_name entry) ""))
-        (title-width (- (window-width (get-buffer-window "*wallabag-search*") ) 10 wallabag-search-trailing-width)))
-    (format "%s %s %s (%s) %s"
+  (let* ((title (or (alist-get 'title entry) "NO TITLE"))
+         (created-at (alist-get 'created_at entry))
+         (reading-time (alist-get 'reading_time entry))
+         (is-archived (alist-get 'is_archived entry))
+         (is-starred (alist-get 'is_starred entry))
+         (tag (alist-get 'tag entry))
+         (domain-name (or (alist-get 'domain_name entry) ""))
+         (title-width (- (window-width (get-buffer-window "*wallabag-search*") ) 10 wallabag-search-trailing-width))
+         (star (if (= is-starred 0)
+                   ""
+                 (format "%s " (propertize wallabag-starred-icon
+                                           'face 'wallabag-starred-face
+                                           'mouse-face 'wallabag-mouse-face
+                                           'help-echo "Filter the favorite items")))))
+    (format "%s %s%s %s (%s) %s"
             (propertize (substring created-at 0 10) 'face 'wallabag-date-face)
-            (propertize (wallabag-format-column
-                         title (wallabag-clamp
-                                wallabag-search-title-min-width
-                                title-width
-                                wallabag-search-title-max-width)
-                         :left) 'face 'wallabag-title-face)
+            star
+            (if (= is-archived 0)
+                (propertize (wallabag-format-column
+                             title (wallabag-clamp
+                                    (- wallabag-search-title-min-width (length star))
+                                    (- title-width (length star))
+                                    (- wallabag-search-title-max-width (length star)))
+                             :left) 'face 'wallabag-title-face)
+              (propertize (wallabag-format-column
+                           title (wallabag-clamp
+                                  (- wallabag-search-title-min-width (length star))
+                                  (- title-width (length star))
+                                  (- wallabag-search-title-max-width (length star)))
+                           :left) 'face 'wallabag-archive-face))
             (propertize domain-name 'face 'wallabag-domain-name-face)
             (propertize tag 'face 'wallabag-tag-face)
             (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))))

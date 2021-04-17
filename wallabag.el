@@ -594,14 +594,15 @@ TAGS are seperated by comma."
      (interactive (list (if ,int-or-str
                             (if (eq (alist-get ',(intern (alist-get field wallabag-field-mapping nil nil #'equal))
                                                (get-text-property (point) 'wallabag-entry)) 1 ) 0 1)
-                          (read-from-minibuffer ,(format "Insert a new %s? " field)))))
+                          (read-from-minibuffer ,(format "Insert a new %s? " field)
+                                                (alist-get ',(intern (alist-get field wallabag-field-mapping nil nil #'equal))
+                                                           (get-text-property (point) 'wallabag-entry))))))
      (let* ((entry (get-text-property (point) 'wallabag-entry) )
          (id (alist-get 'id entry))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token)))
          (beg (line-beginning-position))
-         (end (1+ (line-end-position)))
-         )
+         (end (1+ (line-end-position))))
     (request (format "%s/api/entries/%s.json" host id)
           :parser 'json-read
           :type "PATCH"

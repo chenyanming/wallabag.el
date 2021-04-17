@@ -156,6 +156,17 @@ When live editing the filter, it is bound to :live.")
 
 (defvar wallabag-retrievingp nil)
 
+(defconst wallabag-field-mapping '(("title" . "title")
+                                   ("tags" . "tags")
+                                   ("archive" . "is_archived")
+                                   ("starred" . "is_starred")
+                                   ("content" . "content")
+                                   ("language" . "language")
+                                   ("preview_picture" . "preview_picture")
+                                   ("published_at" . "published_at")
+                                   ("authors" . "published_by")
+                                   ("public" . "is_public")
+                                   ("origin_url" . "origin_url")))
 ;;; requests
 
 (defun wallabag-request-token ()
@@ -222,10 +233,8 @@ When live editing the filter, it is bound to :live.")
 (defun wallabag-request-entries(perpage)
   "Request PERPAGE entries, entries that do not exist in the server will be deleted."
   (interactive (list (if wallabag-new-databasep
-                         (let ((num (read-from-minibuffer "How many articles you want to retrieve? ")))
-                           (if (= (string-to-number (or num "0")) 0)
-                               wallabag-number-of-entries-to-be-retrieved
-                             (string-to-number num)) )
+                         (let ((num (string-to-number (read-from-minibuffer "How many articles you want to retrieve? ") )))
+                           (if (= num 0) wallabag-number-of-entries-to-be-retrieved num))
                        wallabag-number-of-entries-to-be-retrieved)))
   ;; indicate it is retrieving.
   (setq wallabag-retrievingp t)
@@ -347,16 +356,20 @@ When live editing the filter, it is bound to :live.")
                     ;; (message "Retrieved all tags Done")
                     ))))))
 
-(defmacro wallabag-entries-update (field)
-  `(defun ,(intern (format "wallabag-entries-update-%s" field)) (id new)
-     "Update field of ID to NEW."
+(defmacro wallabag-full-entries-update (field)
+  `(defun ,(intern (format "wallabag-full-entries-update-%s" field)) (id new)
+     ,(format (concat "Update feild - %s of ID to NEW in `wallabag-full-entries'." ) field)
      (let ((entry (cl-find-if (lambda (x) (eq id (alist-get 'id x))) wallabag-full-entries)))
        (setf
-        (alist-get ',(intern "tag") entry)
+        (alist-get ',(intern field) entry)
         new))))
 
-(wallabag-entries-update "tag")
-(wallabag-entries-update "tags")
+(wallabag-full-entries-update "title")
+(wallabag-full-entries-update "tag")
+(wallabag-full-entries-update "tags")
+(wallabag-full-entries-update "is_archived")
+(wallabag-full-entries-update "is_starred")
+(wallabag-full-entries-update "origin_url")
 
 (defun wallabag-add-tags(tags)
   "Add TAGS to the entry at point.
@@ -387,8 +400,8 @@ TAGS are seperated by comma."
                          (tag (wallabag-convert-tags-to-tag data)))
                     (wallabag-db-update-tags id tags)
                     (wallabag-db-update-tag id tag)
-                    (wallabag-entries-update-tags id tags)
-                    (wallabag-entries-update-tag id tag)
+                    (wallabag-full-entries-update-tags id tags)
+                    (wallabag-full-entries-update-tag id tag)
                     (with-current-buffer (wallabag-search-buffer)
                       (setq ori (point))
                       (save-excursion
@@ -436,8 +449,8 @@ TAGS are seperated by comma."
                         (tag (wallabag-convert-tags-to-tag data)))
                     (wallabag-db-update-tags id tags)
                     (wallabag-db-update-tag id tag)
-                    (wallabag-entries-update-tags id tags)
-                    (wallabag-entries-update-tag id tag)
+                    (wallabag-full-entries-update-tags id tags)
+                    (wallabag-full-entries-update-tag id tag)
                     (with-current-buffer (wallabag-search-buffer)
                       (setq ori (point))
                       (save-excursion
@@ -573,6 +586,53 @@ TAGS are seperated by comma."
                             (delete-region beg end)))
                         (message "Deletion Done"))))))))
 
+
+
+(defmacro wallabag-update-entry (field int-or-str)
+  `(defun ,(intern (format "wallabag-update-entry-%s" field)) (new)
+     ,(format "Set %s." field)
+     (interactive (list (if ,int-or-str
+                            (if (eq (alist-get ',(intern (alist-get field wallabag-field-mapping nil nil #'equal))
+                                               (get-text-property (point) 'wallabag-entry)) 1 ) 0 1)
+                          (read-from-minibuffer ,(format "Insert a new %s? " field)))))
+     (let* ((entry (get-text-property (point) 'wallabag-entry) )
+         (id (alist-get 'id entry))
+         (host wallabag-host)
+         (token (or wallabag-token (wallabag-request-token)))
+         (beg (line-beginning-position))
+         (end (1+ (line-end-position)))
+         )
+    (request (format "%s/api/entries/%s.json" host id)
+          :parser 'json-read
+          :type "PATCH"
+          :data `(("access_token" . ,token)
+                  (,,field . ,new))
+          :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
+          :error
+          (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                         ;; one of error is token expires
+                         (message "%s" error-thrown)
+                         (setq wallabag-token nil)))
+          :success (cl-function
+                    (lambda (&key data &allow-other-keys)
+                      (let* ((inhibit-read-only t)
+                             (content (alist-get ',(intern (alist-get field wallabag-field-mapping nil nil #'equal)) data)))
+                        (,(intern (format "wallabag-db-update-%s" (alist-get field wallabag-field-mapping nil nil #'equal))) id content)
+                        (,(intern (format "wallabag-full-entries-update-%s" (alist-get field wallabag-field-mapping nil nil #'equal))) id content)
+                        (with-current-buffer (wallabag-search-buffer)
+                          (setq ori (point))
+                          (save-excursion
+                            (delete-region beg end)
+                            (goto-char beg)
+                            (funcall wallabag-search-print-entry-function (car (wallabag-db-select id))))
+                          (goto-char ori))
+                        (message "Update %s Done" ,field))))))))
+
+(wallabag-update-entry "title" nil)
+(wallabag-update-entry "archive" t)
+(wallabag-update-entry "starred" t)
+(wallabag-update-entry "origin_url" nil)
+
 (defun wallabag-original-entry()
   "Show entry rendered with original html."
   (interactive)
@@ -706,6 +766,10 @@ TAGS are seperated by comma."
     (define-key map "t" #'wallabag-add-tags)
     (define-key map "T" #'wallabag-remove-tag)
     (define-key map "'" #'wallabag-toggle-sidebar)
+    (define-key map "x" #'wallabag-update-entry-archive)
+    (define-key map "f" #'wallabag-update-entry-star)
+    (define-key map "i" #'wallabag-update-entry-title)
+    (define-key map "I" #'wallabag-update-entry-origin_url)
     map)
   "Keymap for `wallabag-search-mode'.")
 
@@ -729,7 +793,11 @@ TAGS are seperated by comma."
       (kbd "y") 'wallabag-org-link-copy
       (kbd "t") 'wallabag-add-tags
       (kbd "T") 'wallabag-remove-tag
-      (kbd "'") 'wallabag-toggle-sidebar))
+      (kbd "'") 'wallabag-toggle-sidebar
+      (kbd "x") 'wallabag-update-entry-archive
+      (kbd "f") 'wallabag-update-entry-starred
+      (kbd "i") 'wallabag-update-entry-title
+      (kbd "I") 'wallabag-update-entry-origin_url))
 
 (define-derived-mode wallabag-search-mode fundamental-mode "wallabag-search"
   "Major mode for listing wallabag entries.
@@ -1004,13 +1072,14 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
          (domain-name (or (alist-get 'domain_name entry) ""))
          (content (or html (alist-get 'content entry) ""))
          (url (alist-get 'url entry))
+         (origin-url (or (alist-get 'origin_url entry) ""))
          beg end)
     (let ((inhibit-read-only t))
       (with-current-buffer buff
         (erase-buffer)
         (insert (propertize title 'face 'wallabag-entry-title-face 'wallabag-entry entry))
         (insert "\n")
-        (insert (format "%s  %s  %s%s  %s%s"
+        (insert (format "%s  %s  %s%s  %s%s %s%s"
                         (propertize (format "%s min" reading-time) 'face 'wallabag-reading-time-face)
                         (propertize (format "%s" (replace-regexp-in-string "T" " " (substring created-at 0 19))) 'face 'wallabag-date-face)
                         (cdr (cl-find ":arrow-right-hook:" wallabag-emoji-alist :test 'string= :key 'car) )
@@ -1020,6 +1089,22 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
                           (propertize domain-name
                                       'face 'wallabag-domain-name-face
                                       'help-echo url
+                                      'follow-link t
+                                      'mouse-face 'highlight
+                                      'keymap map))
+                        (if (string= origin-url "")
+                            ""
+                            (cdr (cl-find ":arrow-upper-right:" wallabag-emoji-alist :test 'string= :key 'car) ))
+                        (let ((map (make-sparse-keymap)))
+                          (define-key map [mouse-1] 'wallabag-mouse-1)
+                          (define-key map (kbd "<RET>") 'wallabag-ret)
+                          (propertize (let ((len (length origin-url))
+                                            (max 30))
+                                        (if (> len max)
+                                            (concat (substring origin-url 0 max) "...")
+                                          (substring origin-url 0 len)))
+                                      'face 'wallabag-domain-name-face
+                                      'help-echo origin-url
                                       'follow-link t
                                       'mouse-face 'highlight
                                       'keymap map))

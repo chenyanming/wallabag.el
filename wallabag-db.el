@@ -176,4 +176,8 @@
 (wallabag-db-update "tag")
 (wallabag-db-update "tags")
 (wallabag-db-update "content")
+(wallabag-db-update "is_archived")
+(wallabag-db-update "is_starred")
+(wallabag-db-update "origin_url")
+
 (provide 'wallabag-db)

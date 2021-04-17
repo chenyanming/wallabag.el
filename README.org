@@ -117,6 +117,10 @@ PS:
     | t                     | wallabag-add-tags                        | Add tags (seperated by comma) to entry at point.                     |
     | T                     | wallabag-remove-tag                      | Remove one tag from list.                                            |
     | '                     | wallabag-toggle-sidebar                  | Toggle sidebar.                                                      |
+    | x                     | wallabag-update-entry-archive            | Toggle archive (Read/Unread).                                        |
+    | f                     | wallabag-update-entry-starred            | Toggle star (favorites).                                             |
+    | i                     | wallabag-update-entry-title              | Update title.                                                        |
+    | I                     | wallabag-update-entry-origin_url         | Update origin url (from where you found it).                         |
 
 ** wallabag-entry-mode
     | v       | wallabag-view           | View the wallabag entry.                        |

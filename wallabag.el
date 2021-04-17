@@ -484,6 +484,7 @@ TAGS are seperated by comma."
                           (goto-char (wallabag-find-candidate-location id))
                           (wallabag-flash-show (line-beginning-position) (line-end-position) 'highlight 0.5))
                       (wallabag-db-insert (list data))
+                      (push data wallabag-full-entries)
                       (with-current-buffer (wallabag-search-buffer)
                         (save-excursion
                           (goto-char (point-min))
@@ -526,6 +527,7 @@ TAGS are seperated by comma."
                           data))
                   (let ((inhibit-read-only t))
                     (wallabag-db-insert (list data))
+                    (push data wallabag-full-entries)
                     (with-current-buffer (wallabag-search-buffer)
                       (save-excursion
                         (goto-char (point-min))
@@ -556,6 +558,7 @@ TAGS are seperated by comma."
                     (lambda (&key _data &allow-other-keys)
                       (let ((inhibit-read-only t))
                         (wallabag-db-delete id)
+                        (pop wallabag-full-entries)
                         (with-current-buffer (wallabag-search-buffer)
                           (save-excursion
                             (delete-region beg end)))

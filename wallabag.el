@@ -341,6 +341,17 @@ When live editing the filter, it is bound to :live.")
                     ;; (message "Retrieved all tags Done")
                     ))))))
 
+(defmacro wallabag-entries-update (field)
+  `(defun ,(intern (format "wallabag-entries-update-%s" field)) (id new)
+     "Update field of ID to NEW."
+     (let ((entry (cl-find-if (lambda (x) (eq id (alist-get 'id x))) wallabag-full-entries)))
+       (setf
+        (alist-get ',(intern "tag") entry)
+        new))))
+
+(wallabag-entries-update "tag")
+(wallabag-entries-update "tags")
+
 (defun wallabag-add-tags(tags)
   "Add TAGS to the entry at point.
 TAGS are seperated by comma."
@@ -351,7 +362,8 @@ TAGS are seperated by comma."
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token)))
          (beg (line-beginning-position))
-         (end (1+ (line-end-position))))
+         (end (1+ (line-end-position)))
+         ori)
     (request (format "%s/api/entries/%s/tags.json" host id)
       :parser 'json-read
       :type "POST"
@@ -364,14 +376,20 @@ TAGS are seperated by comma."
                      (setq wallabag-token nil)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
-                  (let ((inhibit-read-only t))
-                    (wallabag-db-update-tags id (alist-get 'tags data))
-                    (wallabag-db-update-tag id (wallabag-convert-tags-to-tag data))
+                  (let* ((inhibit-read-only t)
+                         (tags (alist-get 'tags data))
+                         (tag (wallabag-convert-tags-to-tag data)))
+                    (wallabag-db-update-tags id tags)
+                    (wallabag-db-update-tag id tag)
+                    (wallabag-entries-update-tags id tags)
+                    (wallabag-entries-update-tag id tag)
                     (with-current-buffer (wallabag-search-buffer)
+                      (setq ori (point))
                       (save-excursion
                         (delete-region beg end)
                         (goto-char beg)
-                        (funcall wallabag-search-print-entry-function (car (wallabag-db-select id)))))
+                        (funcall wallabag-search-print-entry-function (car (wallabag-db-select id))))
+                      (goto-char ori))
                     (wallabag-request-tags)
                     (message "Add Tags Done")))))))
 
@@ -394,7 +412,8 @@ TAGS are seperated by comma."
                  "Selete the tag you want to delete: "
                  (mapcar 'cdr tag-list)) tag-list :test 'string= :key 'cdr)))
          (beg (line-beginning-position))
-         (end (1+ (line-end-position))))
+         (end (1+ (line-end-position)))
+         ori)
     (request (format "%s/api/entries/%s/tags/%s.json" host id tag)
       :type "DELETE"
       :parser 'json-read
@@ -406,14 +425,20 @@ TAGS are seperated by comma."
                      (setq wallabag-token nil)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
-                  (let ((inhibit-read-only t))
-                    (wallabag-db-update-tags id (alist-get 'tags data))
-                    (wallabag-db-update-tag id (wallabag-convert-tags-to-tag data))
+                  (let* ((inhibit-read-only t)
+                        (tags (alist-get 'tags data))
+                        (tag (wallabag-convert-tags-to-tag data)))
+                    (wallabag-db-update-tags id tags)
+                    (wallabag-db-update-tag id tag)
+                    (wallabag-entries-update-tags id tags)
+                    (wallabag-entries-update-tag id tag)
                     (with-current-buffer (wallabag-search-buffer)
+                      (setq ori (point))
                       (save-excursion
-                        (delete-region beg end)
-                        (goto-char beg)
-                        (funcall wallabag-search-print-entry-function (car (wallabag-db-select id)))))
+                       (delete-region beg end)
+                       (goto-char beg)
+                       (funcall wallabag-search-print-entry-function (car (wallabag-db-select id))))
+                      (goto-char ori))
                     (wallabag-request-tags)
                     (message "Remove Tag Done")))))))
 

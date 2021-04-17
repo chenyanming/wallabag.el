@@ -1247,11 +1247,18 @@ Defaults to current directory."
 (defun wallabag-sidebar-refresh ()
    (with-current-buffer wallabag-sidebar-buffer
     (with-silent-modifications
-      (setq header-line-format (list :propertize "Tags" 'face 'bold))
+      (setq header-line-format (list :propertize "Groups" 'face 'bold))
       (erase-buffer)
+      (insert (propertize "Unread\n" 'face 'bold))
+      (insert (propertize "Starred\n" 'face 'bold))
+      (insert (propertize "Archive\n" 'face 'bold))
+      (insert (propertize "All entries\n" 'face 'bold))
+      (insert (propertize "Tags\n" 'face 'bold))
+      ;; insert tags
       (dolist (tag wallabag-all-tags)
         (insert (cdr tag))
-        (insert "\n")))))
+        (insert "\n")))
+    (goto-char (point-min))))
 
 (defun wallabag-sidebar-quit ()
   (interactive)
@@ -1372,11 +1379,17 @@ ARGUMENT FILTER is the filter string."
         res-list)
     (cl-loop for entry in wallabag-full-entries do
              (if (eval `(and ,@(cl-loop for regex in matches collect
-                                        (or
-                                         (string-match-p regex (or (alist-get 'title entry) ""))
-                                         (string-match-p regex (alist-get 'created_at entry))
-                                         (string-match-p regex (or (alist-get 'domain_name entry) "") )
-                                         (string-match-p regex (alist-get 'tag entry))))))
+                                        (cond
+                                         ((string= "Unread" regex) (eq (alist-get 'is_archived entry) 0))
+                                         ((string= "Starred" regex) (eq (alist-get 'is_starred entry) 1))
+                                         ((string= "Archive" regex) (eq (alist-get 'is_archived entry) 1))
+                                         ((string-match-p regex "All entries") t)
+                                         ((string= "Tags" regex) t)
+                                         (t (or
+                                             (string-match-p regex (or (alist-get 'title entry) ""))
+                                             (string-match-p regex (alist-get 'created_at entry))
+                                             (string-match-p regex (or (alist-get 'domain_name entry) "") )
+                                             (string-match-p regex (alist-get 'tag entry))))))))
                  (push entry res-list)))
     (nreverse res-list)))
 

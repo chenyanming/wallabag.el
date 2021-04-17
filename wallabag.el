@@ -157,6 +157,7 @@ When live editing the filter, it is bound to :live.")
 (defvar wallabag-retrievingp nil)
 
 (defvar wallabag-live-filteringp nil)
+(defvar wallabag-group-filteringp nil)
 
 (defconst wallabag-field-mapping '(("title" . "title")
                                    ("tags" . "tags")
@@ -739,7 +740,11 @@ TAGS are seperated by comma."
                                    (if (equal wallabag-search-entries '(""))
                                        "0   "
                                      (concat (number-to-string (length wallabag-search-entries)) "   "))) 'face font-lock-warning-face) )
-           (propertize (format "%s" (if (equal wallabag-search-filter "")
+           (propertize (format "%s%s"
+                               (if wallabag-group-filteringp
+                                   "Group: "
+                                 "")
+                               (if (equal wallabag-search-filter "")
                                         ""
                                       (concat wallabag-search-filter "   "))) 'face font-lock-keyword-face)
            (propertize (let ((len (length (wallabag-find-marked-candidates))))
@@ -1023,6 +1028,7 @@ Argument EVENT mouse event."
   (interactive)
   (setq wallabag-search-entries nil)
   (setq wallabag-full-entries nil)
+  (setq wallabag-group-filteringp nil)
   (wallabag-search-keyword-filter "")
   (wallabag))
 
@@ -1270,18 +1276,21 @@ Defaults to current directory."
 (defun wallabag-sidebar-find-tag ()
   "Filter by tag at point."
   (interactive)
+  (setq wallabag-group-filteringp t)
   (wallabag-search-keyword-filter (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
 
 (defun wallabag-sidebar-find-next-tag ()
   "Filter by next tag at point."
   (interactive)
   (forward-line 1)
+  (setq wallabag-group-filteringp t)
   (wallabag-search-keyword-filter (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
 
 (defun wallabag-sidebar-find-previous-tag ()
   "Filter by previous tag at point."
   (interactive)
   (forward-line -1)
+  (setq wallabag-group-filteringp t)
   (wallabag-search-keyword-filter (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
 
 ;;; live filtering
@@ -1307,6 +1316,7 @@ rather than query the database.
 
   (interactive)
   (setq wallabag-live-filteringp t)
+  (setq wallabag-group-filteringp nil)
   (unwind-protect
       (let ((wallabag-search-filter-active :live))
         (setq wallabag-search-filter
@@ -1405,6 +1415,7 @@ ARGUMENT FILTER is the filter string."
 (defun wallabag-search-clear-filter ()
   "Clear the fitler keyword."
   (interactive)
+  (setq wallabag-group-filteringp nil)
   (wallabag-search-keyword-filter ""))
 
 (defun wallabag-search-keyword-filter (keyword)

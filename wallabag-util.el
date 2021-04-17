@@ -1,5 +1,7 @@
 ;;; wallabag-utils.el --- Emacs wallabag client utils -*- lexical-binding: t; -*-
 
+(require 'compile)
+
 (defvar wallabag-emoji-alist nil)
 (defvar wallabag-emoji-candidates nil)
 (defvar wallabag-emoji-max-length 0)
@@ -66,6 +68,35 @@ Alist with elements in form (emoji . image)")
           (forward-line 1)
           (setq end (point)))
         cand-list))))
+
+(defun wallabag-find-candidate-location (id)
+  "Find candidate location by ID.
+Return value of point, as an integer.."
+  (text-property-any (point-min) (point-max) 'wallabag-id id))
+
+(defun wallabag-flash-show (pos end-pos face delay)
+  "Flash a temporary highlight to help the user find something.
+POS start position
+
+END-POS end position, flash the characters between the two
+points
+
+FACE the flash face used
+
+DELAY the flash delay"
+  (when (and (numberp delay)
+             (> delay 0))
+    ;; else
+    (when (timerp next-error-highlight-timer)
+      (cancel-timer next-error-highlight-timer))
+    (setq compilation-highlight-overlay (or compilation-highlight-overlay
+                                            (make-overlay (point-min) (point-min))))
+    (overlay-put compilation-highlight-overlay 'face face)
+    (overlay-put compilation-highlight-overlay 'priority 10000)
+    (move-overlay compilation-highlight-overlay pos end-pos)
+    (add-hook 'pre-command-hook #'compilation-goto-locus-delete-o)
+    (setq next-error-highlight-timer
+          (run-at-time delay nil #'compilation-goto-locus-delete-o))))
 
 ;;; format
 (defun wallabag-format-column (string width &optional align)

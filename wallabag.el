@@ -439,6 +439,7 @@ TAGS are seperated by comma."
                      (setq wallabag-token nil)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
+                  ;; convert tags array to tag comma seperated string
                   (setq data
                         (progn
                           (setf
@@ -447,10 +448,22 @@ TAGS are seperated by comma."
                                (alist-get 'tag data)
                              (wallabag-convert-tags-to-tag data)))
                           data))
-                  (wallabag-db-insert (list data))
-                  (if (eq major-mode 'wallabag-search-mode)
-                    (wallabag-search-refresh-and-clear-filter))
-                  (message "Add Entry Done"))))))
+                  (let ((inhibit-read-only t)
+                        (id (alist-get 'id data)))
+                    ;; check id exists or not
+                    (if (eq 1 (caar (wallabag-db-sql
+                                     `[:select :exists
+                                       [:select id :from items :where (= id ,id)]])))
+                        (progn
+                          (message "Entry Already Exists")
+                          (goto-char (wallabag-find-candidate-location id))
+                          (wallabag-flash-show (line-beginning-position) (line-end-position) 'highlight 0.5))
+                      (wallabag-db-insert (list data))
+                      (with-current-buffer (wallabag-search-buffer)
+                        (save-excursion
+                          (goto-char (point-min))
+                          (funcall wallabag-search-print-entry-function data)))
+                      (message "Add Entry Done"))))))))
 
 (defun wallabag-insert-entry(title tags)
   "TODO: Insert a entry by TITLE and TAGS, using current buffer."
@@ -477,6 +490,7 @@ TAGS are seperated by comma."
                      (setq wallabag-token nil)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
+                  ;; convert tags array to tag comma seperated string
                   (setq data
                         (progn
                           (setf
@@ -485,9 +499,13 @@ TAGS are seperated by comma."
                                (alist-get 'tag data)
                              (wallabag-convert-tags-to-tag data)))
                           data))
-                  (wallabag-db-insert (list data))
-                  (wallabag-search-refresh-and-clear-filter)
-                  (message "Add Entry Done"))))))
+                  (let ((inhibit-read-only t))
+                    (wallabag-db-insert (list data))
+                    (with-current-buffer (wallabag-search-buffer)
+                      (save-excursion
+                        (goto-char (point-min))
+                        (funcall wallabag-search-print-entry-function data)))
+                    (message "Add Entry Done")))))))
 
 (defun wallabag-delete-entry()
   "Delete a entry at point."
@@ -496,7 +514,9 @@ TAGS are seperated by comma."
          (id (alist-get 'id entry))
          (title (alist-get 'title entry))
          (host wallabag-host)
-         (token (or wallabag-token (wallabag-request-token))))
+         (token (or wallabag-token (wallabag-request-token)))
+         (beg (line-beginning-position))
+         (end (1+ (line-end-position))))
     (if (yes-or-no-p (format "Do you really want to Delete \"%s\"?" title))
         (request (format "%s/api/entries/%s.json" host id)
           :parser 'json-read
@@ -509,9 +529,12 @@ TAGS are seperated by comma."
                          (setq wallabag-token nil)))
           :success (cl-function
                     (lambda (&key _data &allow-other-keys)
-                      (wallabag-db-delete id)
-                      (wallabag-search-refresh-and-clear-filter)
-                      (message "Deletion Done")))))))
+                      (let ((inhibit-read-only t))
+                        (wallabag-db-delete id)
+                        (with-current-buffer (wallabag-search-buffer)
+                          (save-excursion
+                            (delete-region beg end)))
+                        (message "Deletion Done"))))))))
 
 (defun wallabag-original-entry()
   "Show entry rendered with original html."
@@ -777,6 +800,7 @@ Argument EVENT mouse event."
       (setq end (point))
       ;; format the tag and push into attr alist
       (put-text-property beg end 'wallabag-entry entry)
+      (put-text-property beg end 'wallabag-id (alist-get 'id entry))
       (insert "\n"))))
 
 

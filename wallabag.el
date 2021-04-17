@@ -349,7 +349,9 @@ TAGS are seperated by comma."
   (let* ((entry (get-text-property (point) 'wallabag-entry) )
          (id (alist-get 'id entry))
          (host wallabag-host)
-         (token (or wallabag-token (wallabag-request-token))))
+         (token (or wallabag-token (wallabag-request-token)))
+         (beg (line-beginning-position))
+         (end (1+ (line-end-position))))
     (request (format "%s/api/entries/%s/tags.json" host id)
       :parser 'json-read
       :type "POST"
@@ -362,11 +364,16 @@ TAGS are seperated by comma."
                      (setq wallabag-token nil)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
-                  (wallabag-db-update-tags id (alist-get 'tags data))
-                  (wallabag-db-update-tag id (wallabag-convert-tags-to-tag data))
-                  (wallabag-refresh-and-resume)
-                  (wallabag-request-tags)
-                  (message "Add Tags Done"))))))
+                  (let ((inhibit-read-only t))
+                    (wallabag-db-update-tags id (alist-get 'tags data))
+                    (wallabag-db-update-tag id (wallabag-convert-tags-to-tag data))
+                    (with-current-buffer (wallabag-search-buffer)
+                      (save-excursion
+                        (delete-region beg end)
+                        (goto-char beg)
+                        (funcall wallabag-search-print-entry-function (car (wallabag-db-select id)))))
+                    (wallabag-request-tags)
+                    (message "Add Tags Done")))))))
 
 (defun wallabag-remove-tag()
   "Remove one tag of the entry."
@@ -385,7 +392,9 @@ TAGS are seperated by comma."
                (cl-find
                 (completing-read
                  "Selete the tag you want to delete: "
-                 (mapcar 'cdr tag-list)) tag-list :test 'string= :key 'cdr))))
+                 (mapcar 'cdr tag-list)) tag-list :test 'string= :key 'cdr)))
+         (beg (line-beginning-position))
+         (end (1+ (line-end-position))))
     (request (format "%s/api/entries/%s/tags/%s.json" host id tag)
       :type "DELETE"
       :parser 'json-read
@@ -397,11 +406,16 @@ TAGS are seperated by comma."
                      (setq wallabag-token nil)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
-                  (wallabag-db-update-tags id (alist-get 'tags data))
-                  (wallabag-db-update-tag id (wallabag-convert-tags-to-tag data))
-                  (wallabag-refresh-and-resume)
-                  (wallabag-request-tags)
-                  (message "Remove Tag Done"))))))
+                  (let ((inhibit-read-only t))
+                    (wallabag-db-update-tags id (alist-get 'tags data))
+                    (wallabag-db-update-tag id (wallabag-convert-tags-to-tag data))
+                    (with-current-buffer (wallabag-search-buffer)
+                      (save-excursion
+                        (delete-region beg end)
+                        (goto-char beg)
+                        (funcall wallabag-search-print-entry-function (car (wallabag-db-select id)))))
+                    (wallabag-request-tags)
+                    (message "Remove Tag Done")))))))
 
 (defun wallabag-add-entry(url tags)
   "Add a new entry by URL and TAGS."

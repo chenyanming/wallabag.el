@@ -68,7 +68,7 @@
   '((t nil))
   "Default base-level face for `wallabag-sidebar-mode' buffers.")
 
-(defface wallabag-org-link '((t :inherit link :foreground "#78bdff"))
+(defface wallabag-org-link '((t :inherit link :foreground "#94b533"))
   "Face for links."
   :group 'org-faces)
 

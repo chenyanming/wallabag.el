@@ -156,6 +156,8 @@ When live editing the filter, it is bound to :live.")
 
 (defvar wallabag-retrievingp nil)
 
+(defvar wallabag-live-filteringp nil)
+
 (defconst wallabag-field-mapping '(("title" . "title")
                                    ("tags" . "tags")
                                    ("archive" . "is_archived")
@@ -1304,12 +1306,14 @@ rather than query the database.
    keywords can narrow down the search results."
 
   (interactive)
+  (setq wallabag-live-filteringp t)
   (unwind-protect
       (let ((wallabag-search-filter-active :live))
         (setq wallabag-search-filter
               (read-from-minibuffer "Filter: " wallabag-search-filter))
         (message wallabag-search-filter))
-    (wallabag-search-update :force)))
+    (progn (wallabag-search-update :force)
+           (setq wallabag-live-filteringp nil))))
 
 (defun wallabag-search--minibuffer-setup ()
   "Set up the minibuffer for live filtering."
@@ -1377,17 +1381,14 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
 ARGUMENT FILTER is the filter string."
   (let ((matches (plist-get filter :matches))
         res-list)
-    ;; if sidebar window exists we narrow down the search
-    (if (window-live-p (get-buffer-window wallabag-sidebar-buffer))
+    (if wallabag-live-filteringp
         (cl-loop for entry in wallabag-full-entries do
                  (if (eval `(and ,@(cl-loop for regex in matches collect
-                                            (cond
-                                             ((string= "Unread" regex) (eq (alist-get 'is_archived entry) 0))
-                                             ((string= "Starred" regex) (eq (alist-get 'is_starred entry) 1))
-                                             ((string= "Archive" regex) (eq (alist-get 'is_archived entry) 1))
-                                             ((string-match-p regex "All entries") t)
-                                             ((string= "Tags" regex) t)
-                                             (t (string-match-p regex (alist-get 'tag entry)))))))
+                                            (or
+                                             (string-match-p regex (or (alist-get 'title entry) ""))
+                                             (string-match-p regex (alist-get 'created_at entry))
+                                             (string-match-p regex (or (alist-get 'domain_name entry) "") )
+                                             (string-match-p regex (alist-get 'tag entry))))))
                      (push entry res-list)))
       (cl-loop for entry in wallabag-full-entries do
                (if (eval `(and ,@(cl-loop for regex in matches collect
@@ -1397,11 +1398,7 @@ ARGUMENT FILTER is the filter string."
                                            ((string= "Archive" regex) (eq (alist-get 'is_archived entry) 1))
                                            ((string-match-p regex "All entries") t)
                                            ((string= "Tags" regex) t)
-                                           (t (or
-                                               (string-match-p regex (or (alist-get 'title entry) ""))
-                                               (string-match-p regex (alist-get 'created_at entry))
-                                               (string-match-p regex (or (alist-get 'domain_name entry) "") )
-                                               (string-match-p regex (alist-get 'tag entry))))))))
+                                           (t (string-match-p regex (alist-get 'tag entry)))))))
                    (push entry res-list))))
     (nreverse res-list)))
 

@@ -17,7 +17,7 @@
        (dolist (cand candidates)
          (let ((id (alist-get 'id cand))
                (title (alist-get 'title cand)))
-           (insert (format "[[wallabag:%s][wg:%s - %s]]\n" id id title))
+           (insert (format "[[wallabag:%s][%s]]\n" id title))
            (message "Copied: %s - \"%s\" as wallabag org link." id title)))
        (buffer-string)))
     ;; remove overlays and text properties
@@ -38,6 +38,7 @@
 ;; TODO: The description can not be set.
 (org-link-set-parameters
  "wallabag"
- :follow #'wallabag-org-link-view)
+ :follow #'wallabag-org-link-view
+ :face 'wallabag-org-link)
 
 (provide 'wallabag-org)

@@ -63,11 +63,11 @@
        ((> version wallabag-db-version)
         (emacsql-close db)
         (user-error
-         "The anki database was created with a newer Anki version.  %s"
+         "The wallabag database was created with a newer wallabag version.  %s"
          "You need to update the Anki package."))
        ((< version wallabag-db-version)
         (emacsql-close db)
-        (error "BUG: The Anki database scheme changed %s"
+        (error "BUG: The wallabag database scheme changed %s"
                "and there is no upgrade path")))))
   wallabag-db-connection)
 

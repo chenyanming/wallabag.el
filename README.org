@@ -29,7 +29,7 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [x] Offline database (Sqlite)
 - [x] Full update
 - [x] Real time search and filter
-- [x] Sidebar supported: Tags
+- [x] Sidebar supported
 - [x] Select with Ivy
 - [x] sync with all clients (mobile, web, browser extention etc)
 - [x] Support [[https://github.com/chenyanming/shrface][shrface]]

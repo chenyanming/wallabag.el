@@ -143,8 +143,6 @@ When live editing the filter, it is bound to :live.")
 
 (defvar wallabag-all-tags nil)
 
-(defvar wallabag-new-databasep nil)
-
 (defvar wallabag-appname nil)
 (defvar wallabag-version nil)
 (defvar wallabag-allowed-registration nil)
@@ -235,7 +233,7 @@ When live editing the filter, it is bound to :live.")
 
 (defun wallabag-request-entries(perpage)
   "Request PERPAGE entries, entries that do not exist in the server will be deleted."
-  (interactive (list (if wallabag-new-databasep
+  (interactive (list (if wallabag-db-newp
                          (let ((num (string-to-number (read-from-minibuffer "How many articles you want to retrieve? ") )))
                            (if (= num 0) wallabag-number-of-entries-to-be-retrieved num))
                        wallabag-number-of-entries-to-be-retrieved)))
@@ -284,7 +282,7 @@ When live editing the filter, it is bound to :live.")
                                                          (alist-get 'id entry)))))
                   ;; insert new entries retried from wallabag server
                   (wallabag-db-insert entries)
-                  (setq wallabag-new-databasep nil)
+                  (setq wallabag-db-newp nil)
                   (message "Retrived the latest %s articles." (length entries))
 
                   (with-silent-modifications
@@ -1431,7 +1429,7 @@ ARGUMENT FILTER is the filter string."
       (when (yes-or-no-p (format "Are you want to perform full update?"))
         (emacsql-close (wallabag-db))
         (delete-file wallabag-db-file)
-        (setq wallabag-new-databasep t)
+        (setq wallabag-db-newp t)
         (wallabag-search-update-and-clear-filter))))
 
 (provide 'wallabag)

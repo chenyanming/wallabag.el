@@ -14,6 +14,8 @@
 
 (defconst wallabag-db-version 1)
 
+(defvar wallabag-db-newp nil)
+
 (defun wallabag-db ()
   "Connect or create database."
   (unless (and wallabag-db-connection (emacsql-live-p wallabag-db-connection))
@@ -146,7 +148,7 @@
     (if candidates
         candidates
       (message "No items in wallabag database, try to update with 'u'.")
-      (setq wallabag-new-databasep t)
+      (setq wallabag-db-newp t)
       nil)))
 
 ;; insert

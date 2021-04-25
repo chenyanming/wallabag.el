@@ -123,8 +123,8 @@ PS:
     | I                     | wallabag-update-entry-origin_url         | Update origin url (from where you found it).                         |
 
 ** wallabag-entry-mode
-    | v       | wallabag-view           | View the wallabag entry.                        |
-    | V       | wallabag-browse-url     | Browse the url of current wallabag entry.       |
+    | r       | wallabag-view           | Refresh wallabag entry.                         |
+    | M-x     | wallabag-browse-url     | Browse the url of current wallabag entry.       |
     | o       | wallabag-original-entry | Open the original html rendered wallabag entry. |
     | q       | wallabag-entry-quit     | Quit ~*wallabag-entry*~.                          |
     | mouse-1 | wallabag-mouse-1        | Browse the url.                                 |

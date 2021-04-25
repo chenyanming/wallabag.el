@@ -638,6 +638,7 @@ TAGS are seperated by comma."
 (defun wallabag-original-entry()
   "Show entry rendered with original html."
   (interactive)
+  (message "Retriving original page...")
   (let ((url (alist-get 'url (get-text-property (point-min) 'wallabag-entry nil))))
     (request url
       :parser 'buffer-string
@@ -915,7 +916,7 @@ Argument EVENT mouse event."
 
 (defun wallabag-parse-entries-as-list(filter)
   "Parse all entries with FILTER, return as propertized string list."
-  (cl-loop for entry in (wallabag-search--update-list filter) collect
+  (cl-loop for entry in (wallabag-search-update-list filter) collect
            (propertize (wallabag-parse-entry-as-string entry) 'wallabag-entry entry)))
 
 (defun wallabag-search-print-entry--default (entry)
@@ -1049,8 +1050,7 @@ Argument EVENT mouse event."
 
 (if (featurep 'evil)
     (evil-define-key '(normal emacs) wallabag-entry-mode-map
-      (kbd "v") 'wallabag-view
-      (kbd "V") 'wallabag-browse-url
+      (kbd "r") 'wallabag-view
       (kbd "o") 'wallabag-original-entry
       (kbd "q") 'wallabag-entry-quit))
 
@@ -1304,7 +1304,7 @@ The following columns will be searched:
 - tag
 
 If the keyword occurs in any of the columns above, the matched
-ebook record will be shown.
+record will be shown.
 
 1. Live filter is search the results in =wallabag-full-entries=
 rather than query the database.
@@ -1348,21 +1348,21 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
     (let ((inhibit-read-only t)
           (standard-output (current-buffer)))
       (erase-buffer)
-      (wallabag-search--update-list)
+      (wallabag-search-update-list)
       ;; (setq wallabag-search-entries (wallabag-db-select))
       (dolist (entry wallabag-search-entries)
         (funcall wallabag-search-print-entry-function entry))
       ;; (insert "End of entries.\n")
       (goto-char (point-min)))))
 
-(defun wallabag-search--update-list (&optional filter)
+(defun wallabag-search-update-list (&optional filter)
   "Update `wallabag-search-entries' list."
   ;; replace space with _ (SQL) The underscore represents a single character
   (if filter
       (setq wallabag-search-filter filter)
     (setq filter wallabag-search-filter))
   (let* ((filter (wallabag-search-parse-filter filter)) ;; (replace-regexp-in-string " " "_" wallabag-search-filter)
-         (head (wallabag-candidate-filter filter)))
+         (head (wallabag-search-filter-candidates filter)))
     ;; Determine the final list order
     (let ((entries head))
       (setf wallabag-search-entries
@@ -1383,8 +1383,8 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
     (prog1 t
       (string-match-p regexp ""))))
 
-(defun wallabag-candidate-filter (filter)
-  "Generate ebook candidate alist.
+(defun wallabag-search-filter-candidates (filter)
+  "Generate candidate alist.
 ARGUMENT FILTER is the filter string."
   (let ((matches (plist-get filter :matches))
         res-list)

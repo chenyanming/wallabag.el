@@ -814,7 +814,7 @@ TAGS are seperated by comma."
   (buffer-disable-undo)
   (set (make-local-variable 'hl-line-face) 'wallabag-current-match)
   (hl-line-mode)
-  (add-hook 'minibuffer-setup-hook 'wallabag-search--minibuffer-setup))
+  (add-hook 'minibuffer-setup-hook 'wallabag-search-minibuffer-setup))
 
 (defun wallabag-search-buffer ()
   "Create buffer *wallabag-search*."
@@ -1027,7 +1027,7 @@ Argument EVENT mouse event."
   (setq wallabag-search-entries nil)
   (setq wallabag-full-entries nil)
   (setq wallabag-group-filteringp nil)
-  (wallabag-search-keyword-filter "")
+  (wallabag-search-update-buffer-with-keyword "")
   (wallabag))
 
 (defun wallabag-search-update-and-clear-filter ()
@@ -1275,21 +1275,21 @@ Defaults to current directory."
   "Filter by tag at point."
   (interactive)
   (setq wallabag-group-filteringp t)
-  (wallabag-search-keyword-filter (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+  (wallabag-search-update-buffer-with-keyword (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
 
 (defun wallabag-sidebar-find-next-tag ()
   "Filter by next tag at point."
   (interactive)
   (forward-line 1)
   (setq wallabag-group-filteringp t)
-  (wallabag-search-keyword-filter (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+  (wallabag-search-update-buffer-with-keyword (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
 
 (defun wallabag-sidebar-find-previous-tag ()
   "Filter by previous tag at point."
   (interactive)
   (forward-line -1)
   (setq wallabag-group-filteringp t)
-  (wallabag-search-keyword-filter (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+  (wallabag-search-update-buffer-with-keyword (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
 
 ;;; live filtering
 
@@ -1320,16 +1320,16 @@ rather than query the database.
         (setq wallabag-search-filter
               (read-from-minibuffer "Filter: " wallabag-search-filter))
         (message wallabag-search-filter))
-    (progn (wallabag-search-update :force)
+    (progn (wallabag-search-update-buffer)
            (setq wallabag-live-filteringp nil))))
 
-(defun wallabag-search--minibuffer-setup ()
+(defun wallabag-search-minibuffer-setup ()
   "Set up the minibuffer for live filtering."
   (when wallabag-search-filter-active
     (when (eq :live wallabag-search-filter-active)
-      (add-hook 'post-command-hook 'wallabag-search--live-update nil :local))))
+      (add-hook 'post-command-hook 'wallabag-search-update-buffer-with-minibuffer-contents nil :local))))
 
-(defun wallabag-search--live-update ()
+(defun wallabag-search-update-buffer-with-minibuffer-contents ()
   "Update the *wallabag-search* buffer based on the contents of the minibuffer."
   (when (eq :live wallabag-search-filter-active)
     ;; (message "HELLO")
@@ -1338,24 +1338,23 @@ rather than query the database.
       (when buffer
         (with-current-buffer buffer
           (let ((wallabag-search-filter current-filter))
-            (wallabag-search-update :force)))))))
+            (wallabag-search-update-buffer)))))))
 
-(defun wallabag-search-update (&optional force)
+(defun wallabag-search-update-buffer ()
   "Update the *wallabag-search* buffer listing to match the database.
 When FORCE is non-nil, redraw even when the database hasn't changed."
   (interactive)
   (with-current-buffer (wallabag-search-buffer)
-    (when force
-      (let ((inhibit-read-only t)
-            (standard-output (current-buffer)))
-        (erase-buffer)
-        (wallabag-search--update-list)
-        ;; (setq wallabag-search-entries (wallabag-db-select))
-        (dolist (entry wallabag-search-entries)
-          (funcall wallabag-search-print-entry-function entry))
-        ;; (insert "End of entries.\n")
-        (goto-char (point-min))         ; back to point-min after filtering
-        (setf wallabag-search-last-update (float-time))))))
+    (let ((inhibit-read-only t)
+          (standard-output (current-buffer)))
+      (erase-buffer)
+      (wallabag-search--update-list)
+      ;; (setq wallabag-search-entries (wallabag-db-select))
+      (dolist (entry wallabag-search-entries)
+        (funcall wallabag-search-print-entry-function entry))
+      ;; (insert "End of entries.\n")
+      (goto-char (point-min)))))
+
 (defun wallabag-search--update-list (&optional filter)
   "Update `wallabag-search-entries' list."
   ;; replace space with _ (SQL) The underscore represents a single character
@@ -1414,12 +1413,12 @@ ARGUMENT FILTER is the filter string."
   "Clear the fitler keyword."
   (interactive)
   (setq wallabag-group-filteringp nil)
-  (wallabag-search-keyword-filter ""))
+  (wallabag-search-update-buffer-with-keyword ""))
 
-(defun wallabag-search-keyword-filter (keyword)
+(defun wallabag-search-update-buffer-with-keyword (keyword)
   "Filter the *wallabag-search* buffer with KEYWORD."
   (setq wallabag-search-filter keyword)
-  (wallabag-search-update :force))
+  (wallabag-search-update-buffer))
 
 ;;; full update
 (defun wallabag-full-update ()

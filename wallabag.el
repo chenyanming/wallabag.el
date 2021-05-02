@@ -1077,6 +1077,7 @@ Argument EVENT mouse event."
   "Mode for displaying wallabag entry details.
 \\{wallabag-entry-mode-map}"
   (setq buffer-read-only t)
+  (hl-line-mode)
   (buffer-disable-undo))
 
 (defun wallabag-show--buffer-name ()
@@ -1168,7 +1169,9 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
           (progn
             (quit-window)
             (kill-buffer "*wallabag-entry*"))
-        (kill-buffer "*wallabag-entry*")))))
+        (kill-buffer "*wallabag-entry*")
+        (when (buffer-live-p (get-buffer "*wallabag-search*"))
+          (switch-to-buffer (get-buffer "*wallabag-search*")))))))
 
 
 ;;; sidebar

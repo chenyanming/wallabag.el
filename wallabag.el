@@ -36,6 +36,7 @@
 (require 'wallabag-org)
 (require 'cl-lib)
 (require 'request)
+(require 'shr)
 (ignore-errors
   (require 'evil)
   (require 'ivy))
@@ -124,6 +125,24 @@
   "The starred icon."
   :group 'wallabag
   :type 'string)
+
+
+(defcustom wallabag-render-html-function 'wallabag-render-html
+  "Function used to render HTML.
+It's called without arguments with a buffer containing HTML and
+should change it to contain the rendered version of it."
+  :type 'function
+  :group 'wallabag)
+
+(defcustom wallabag-pre-html-render-hook nil
+  "Hook run before `wallabag-render-html'."
+  :type 'hook
+  :group 'wallabag)
+
+(defcustom wallabag-post-html-render-hook nil
+  "Hook run after `wallabag-render-html'."
+  :type 'hook
+  :group 'wallabag)
 
 (defvar wallabag-full-entries nil
   "List of the all entries currently on database.")
@@ -1121,19 +1140,23 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
                         (propertize tag 'face 'wallabag-tag-face)))
         (insert "\n")
         (insert "\n")
+        (wallabag-entry-mode)
         (setq beg (point))
         (insert content)
         (setq end (point))
-        (require 'shr)
-        (shr-render-region beg end)
-        ;; (setq end (point))
-        (wallabag-entry-mode)
+        (funcall wallabag-render-html-function beg end)
         (goto-char (point-min))))
     (unless (eq major-mode 'wallabag-entry-mode)
       (funcall wallabag-show-entry-switch buff)
       (when switch
         (switch-to-buffer-other-window (set-buffer (wallabag-search-buffer)))
         (goto-char original)))))
+
+(defun wallabag-render-html (begin end)
+  "Render HTML in current buffer with shr."
+  (run-hooks 'wallabag-pre-html-render-hook)
+  (shr-render-region begin end)
+  (run-hooks 'wallabag-post-html-render-hook))
 
 (defun wallabag-entry-quit ()
   "Quit the *wallabag-entry*."

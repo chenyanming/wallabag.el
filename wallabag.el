@@ -1077,7 +1077,6 @@ Argument EVENT mouse event."
   "Mode for displaying wallabag entry details.
 \\{wallabag-entry-mode-map}"
   (setq buffer-read-only t)
-  (hl-line-mode)
   (buffer-disable-undo))
 
 (defun wallabag-show--buffer-name ()

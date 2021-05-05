@@ -1102,6 +1102,7 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
          beg end)
     (let ((inhibit-read-only t))
       (with-current-buffer buff
+        (wallabag-emoji-init)
         (erase-buffer)
         (insert (propertize title 'face 'wallabag-entry-title-face 'wallabag-entry entry))
         (insert "\n")

@@ -57,8 +57,17 @@
   "Face for the date (last_modified)."
   :group 'wallabag-faces)
 
-(defface wallabag-entry-title-face '((t :inherit default :height 3.0))
-  "Face used for title on compact view."
+(defface wallabag-entry-title-face
+  '((((class color) (background light))
+     (:foreground "#2e3440"
+      :weight bold
+      :height 2.0))
+    (((class color) (background dark))
+     (:foreground "pale turquoise"
+      :weight bold
+      :height 2.0))
+    (t (:inherit default)))
+  "Face used for title."
   :group 'wallabag-faces)
 
 (defface wallabag-mark-face '((t :inherit highlight))

@@ -176,6 +176,13 @@ When live editing the filter, it is bound to :live.")
 (defvar wallabag-live-filteringp nil)
 (defvar wallabag-group-filteringp nil)
 
+(defcustom wallabag-css-file
+  (concat (file-name-directory load-file-name) "default.css")
+  "Wallabag css file for styling the entry when calls
+`wallabag-browse-with-external-browser.'"
+  :group 'wallabag
+  :type 'file)
+
 (defconst wallabag-field-mapping '(("title" . "title")
                                    ("tags" . "tags")
                                    ("archive" . "is_archived")
@@ -776,6 +783,7 @@ TAGS are seperated by comma."
     (define-key map (kbd "<RET>") #'wallabag-view)
     (define-key map "v" #'wallabag-view)
     (define-key map "V" #'wallabag-browse-url)
+    (define-key map "&" #'wallabag-browse-with-external-browser)
     (define-key map "o" #'wallabag-original-entry)
     (define-key map "s" #'wallabag-search-live-filter)
     (define-key map "q" #'wallabag-search-quit)
@@ -804,6 +812,7 @@ TAGS are seperated by comma."
       (kbd "<RET>") 'wallabag-view
       (kbd "v") 'wallabag-view
       (kbd "V") 'wallabag-browse-url
+      (kbd "&") 'wallabag-browse-with-external-browser
       (kbd "o") 'wallabag-original-entry
       (kbd "/") 'wallabag-search-live-filter
       (kbd "q") 'wallabag-search-quit
@@ -896,6 +905,37 @@ Argument EVENT mouse event."
   (interactive)
   (wallabag-show-entry (or (get-text-property (point) 'wallabag-entry nil)
                            (get-text-property (point-min) 'wallabag-entry nil))))
+
+(defun wallabag-browse-with-external-browser ()
+  "View the wallabag entry with `browse-url'."
+  (interactive)
+  (let* ((entry (or (get-text-property (point) 'wallabag-entry nil)
+                    (get-text-property (point-min) 'wallabag-entry nil)))
+         (title (or (alist-get 'title entry) "NO TITLE"))
+         (reading-time (alist-get 'reading_time entry))
+         (created-at (alist-get 'created_at entry))
+         (tag (alist-get 'tag entry))
+         (domain-name (or (alist-get 'domain_name entry) ""))
+         (content (or (alist-get 'content entry)  ""))
+         (url (alist-get 'url entry))
+         (origin-url (or (alist-get 'origin_url entry) "")))
+    (when (get-buffer "*wallabag-entry-html*")
+      (kill-buffer "*wallabag-entry-html*"))
+    (with-current-buffer (get-buffer-create "*wallabag-entry-html*")
+      (insert "<h1>" title "</h1>")
+      (insert
+       (format "<div>%s %s min read <a href=\"%s\">%s</a>"
+               (replace-regexp-in-string "T" " " (substring created-at 0 19))
+               reading-time
+               origin-url
+               domain-name))
+      (insert content)
+      (insert "<style>")
+      (insert-file-contents wallabag-css-file)
+      (goto-char (point-max))
+      (insert "</style>")
+      (require 'browse-url)
+      (browse-url-of-buffer))))
 
 (defun wallabag-parse-entry-as-string (entry)
   "Parse the wallabag ENTRY and return as string."
@@ -1060,6 +1100,7 @@ Argument EVENT mouse event."
 
 (defvar wallabag-entry-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "&" #'wallabag-browse-with-external-browser)
     (define-key map "q" #'wallabag-entry-quit)
     (define-key map "v" #'wallabag-view)
     (define-key map "V" #'wallabag-browse-url)
@@ -1069,6 +1110,7 @@ Argument EVENT mouse event."
 
 (if (featurep 'evil)
     (evil-define-key '(normal emacs) wallabag-entry-mode-map
+      (kbd "&") 'wallabag-browse-with-external-browser
       (kbd "r") 'wallabag-view
       (kbd "o") 'wallabag-original-entry
       (kbd "q") 'wallabag-entry-quit))

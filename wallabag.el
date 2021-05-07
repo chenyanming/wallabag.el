@@ -922,14 +922,36 @@ Argument EVENT mouse event."
     (when (get-buffer "*wallabag-entry-html*")
       (kill-buffer "*wallabag-entry-html*"))
     (with-current-buffer (get-buffer-create "*wallabag-entry-html*")
+      (wallabag-emoji-init)
+      (insert "<title>" title "</title>")
       (insert "<h1>" title "</h1>")
       (insert
-       (format "<div>%s %s min read <a href=\"%s\">%s</a>"
+       (format "
+<div class=\"subtitle\">
+%s %s min read
+%s<a href=\"%s\">%s</a>
+%s<a href=\"%s\">%s</a>
+%s%s
+</div>"
                (replace-regexp-in-string "T" " " (substring created-at 0 19))
                reading-time
+               (cdr (cl-find ":arrow-upper-right:" wallabag-emoji-alist :test 'string= :key 'car) )
+               url
+               domain-name
+               (if (string= origin-url "")
+                   ""
+                 (cdr (cl-find ":arrow-upper-right:" wallabag-emoji-alist :test 'string= :key 'car) ))
                origin-url
-               domain-name))
-      (insert content)
+               (let ((len (length origin-url))
+                     (max 30))
+                 (if (> len max)
+                     (concat (substring origin-url 0 max) "...")
+                   (substring origin-url 0 len)))
+               (if (string= tag "")
+                   ""
+                 (cdr (cl-find ":pushpin:" wallabag-emoji-alist :test 'string= :key 'car)))
+               tag))
+      (insert (format "<div class=\"article\">%s</div>" content) )
       (insert "<style>")
       (insert-file-contents wallabag-css-file)
       (goto-char (point-max))

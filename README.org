@@ -84,8 +84,11 @@ Afterwards, the number of entries is controlled by ~wallabag-number-of-entries-t
 
 PS: 
 1. Network quality impacts the retrieving time. Keep ~wallabag-number-of-entries-to-be-retrieved~ as small as possible to decrease the retrieving time.
-2. The synchronization algorithm is still on development, if you want to keep local database always updated, please use ~wallabag-full-update~.
-3. ~wallabag-full-update~ will always ask you to input the number of entries you want to retrieve.
+2. This package is not smart enough to know how many unretrieved entries (will be improved in
+   the future). Please make sure the ~wallabag-number-of-entries-to-be-retrieved~ is larger than
+   the total number of unretrieved entries.
+3. The synchronization algorithm is still on development, if you want to keep local database always updated, please use ~wallabag-full-update~.
+4. ~wallabag-full-update~ will always ask you to input the number of entries you want to retrieve.
 
 ** Functions can be used outside wallabag related modes
 | wallabag                 | Enter ~*wallabag-search*~ buffer.                                                                        |

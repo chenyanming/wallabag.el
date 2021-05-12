@@ -171,7 +171,7 @@ When live editing the filter, it is bound to :live.")
 (defvar wallabag-user-created-at nil)
 (defvar wallabag-user-updated-at nil)
 
-(defvar wallabag-retrievingp nil)
+(defvar wallabag-retrieving-p nil)
 
 (defvar wallabag-live-filteringp nil)
 (defvar wallabag-group-filteringp nil)
@@ -257,14 +257,17 @@ When live editing the filter, it is bound to :live.")
                   (setq wallabag-user-updated-at (assoc-default 'updated_at data))
                   (message "Request User Info Done."))))))
 
-(defun wallabag-request-entries(perpage)
-  "Request PERPAGE entries, entries that do not exist in the server will be deleted."
+(defun wallabag-request-entries(perpage arg)
+  "Request PERPAGE entries, entries that do not exist in the server will be deleted.
+If with prefix, prompt the user to input number of entries to be
+retrieved."
   (interactive (list (if wallabag-db-newp
                          (let ((num (string-to-number (read-from-minibuffer "How many articles you want to retrieve? ") )))
                            (if (= num 0) wallabag-number-of-entries-to-be-retrieved num))
-                       wallabag-number-of-entries-to-be-retrieved)))
+                       wallabag-number-of-entries-to-be-retrieved)
+                     current-prefix-arg))
   ;; indicate it is retrieving.
-  (setq wallabag-retrievingp t)
+  (setq wallabag-retrieving-p t)
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
@@ -277,7 +280,11 @@ When live editing the filter, it is bound to :live.")
       :params `(("sort" . ,sort)
                 ("order" . ,order)
                 ("page" . ,page)
-                ("perPage" . ,perpage)
+                ("perPage" . ,(if arg
+                                  (setq perpage
+                                        (let ((num (string-to-number (read-from-minibuffer "How many articles you want to retrieve? ") )))
+                                          (if (= num 0) wallabag-number-of-entries-to-be-retrieved num)))
+                                perpage ))
                 ("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
                  ("Content-Type" . "application/json"))
@@ -320,7 +327,7 @@ When live editing the filter, it is bound to :live.")
                       (erase-buffer)
                       (setq wallabag-search-entries (nreverse (wallabag-db-select)))
                       (setq wallabag-full-entries wallabag-search-entries)
-                      (unless (equal wallabag-full-entries '(""))   ; not empty list
+                      (unless (equal wallabag-full-entries '("")) ; not empty list
                         (cl-loop for entry in wallabag-full-entries do
                                  (funcall wallabag-search-print-entry-function entry)))
                       (wallabag-search-mode)
@@ -328,7 +335,7 @@ When live editing the filter, it is bound to :live.")
                       (goto-char current)))
 
                   ;; indicate the retrieving is finished, and update the header
-                  (setq wallabag-retrievingp nil))))))
+                  (setq wallabag-retrieving-p nil))))))
 
 (defun wallabag-request-format (&optional format)
   "TODO: Request the format to be exported."
@@ -759,7 +766,7 @@ TAGS are seperated by comma."
           (propertize "Wallabag" 'face font-lock-preprocessor-face)
           (propertize (format "%s" wallabag-host) 'face font-lock-type-face)
           (concat
-           (if wallabag-retrievingp
+           (if wallabag-retrieving-p
                (propertize "Updating..." 'face font-lock-warning-face)
                (propertize (format "Total: %s"
                                    (if (equal wallabag-search-entries '(""))

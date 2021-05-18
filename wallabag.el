@@ -1064,8 +1064,8 @@ Argument EVENT mouse event."
 (defun wallabag-unmark-and-backward ()
   "Unmark the current line and backward."
   (interactive)
-  (wallabag-unmark-at-point)
-  (wallabag-previous-entry))
+  (wallabag-previous-entry)
+  (wallabag-unmark-at-point))
 
 ;; moving
 

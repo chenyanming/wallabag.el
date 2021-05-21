@@ -823,8 +823,8 @@ TAGS are seperated by comma."
       (kbd "o") 'wallabag-original-entry
       (kbd "/") 'wallabag-search-live-filter
       (kbd "q") 'wallabag-search-quit
-      (kbd "r") 'wallabag-search-refresh-and-clear-filter
-      (kbd "R") 'wallabag-search-clear-filter
+      (kbd "g r") 'wallabag-search-clear-filter
+      (kbd "g R") 'wallabag-search-refresh-and-clear-filter
       (kbd "u") 'wallabag-search-update-and-clear-filter
       (kbd "m") 'wallabag-mark-and-forward
       (kbd "<DEL>") 'wallabag-unmark-and-backward
@@ -1140,7 +1140,7 @@ Argument EVENT mouse event."
 (if (featurep 'evil)
     (evil-define-key '(normal emacs) wallabag-entry-mode-map
       (kbd "&") 'wallabag-browse-with-external-browser
-      (kbd "r") 'wallabag-view
+      (kbd "g r") 'wallabag-view
       (kbd "o") 'wallabag-original-entry
       (kbd "q") 'wallabag-entry-quit))
 
@@ -1305,8 +1305,8 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
     (evil-define-key '(normal emacs) wallabag-sidebar-mode-map
       (kbd "'") 'wallabag-toggle-sidebar
       (kbd "<RET>") 'wallabag-sidebar-find-tag
-      (kbd "r") 'wallabag-search-clear-filter
-      (kbd "R") 'wallabag-search-clear-filter
+      (kbd "g r") 'wallabag-search-clear-filter
+      (kbd "g R") 'wallabag-search-clear-filter
       (kbd "n") 'wallabag-sidebar-find-next-tag
       (kbd "p") 'wallabag-sidebar-find-previous-tag
       (kbd "q") 'wallabag-sidebar-quit))

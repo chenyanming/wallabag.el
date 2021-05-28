@@ -7,6 +7,7 @@
 - [[#description][Description]]
 - [[#features][Features]]
 - [[#installation-and-configuration][Installation and Configuration]]
+- [[#caching][Caching]]
 - [[#keybindings][Keybindings]]
 - [[#change-logs][Change logs]]
 
@@ -75,6 +76,12 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
   ;; (setq wallabag-db-file "~/OneDrive/Org/wallabag.sqlite") ;; optional, default is saved to ~/.emacs.d/.cache/wallabag.sqlite
   ;; (run-with-timer 0 3540 'wallabag-request-token) ;; optional, auto refresh token, token should refresh every hour
   )
+#+end_src
+
+* Caching
+Wallabag will download the images, but using Emacs [[https://www.gnu.org/software/emacs/manual/html_node/url/Disk-Caching.html][disk caching]] capability. Setting ~url-automatic-caching~ non-nil causes documents to be cached automatically.
+#+begin_src emacs-lisp
+(setq url-automatic-caching t)
 #+end_src
 
 * Keybindings

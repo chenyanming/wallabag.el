@@ -37,6 +37,7 @@
 (require 'cl-lib)
 (require 'request)
 (require 'shr)
+(require 'browse-url)
 (ignore-errors
   (require 'evil)
   (require 'ivy))
@@ -143,6 +144,10 @@ should change it to contain the rendered version of it."
   "Hook run after `wallabag-render-html'."
   :type 'hook
   :group 'wallabag)
+
+(defcustom wallabag-browser-function 'browse-url
+  "Browser function used when opening wallabag entry."
+  :type browse-url--browser-defcustom-type)
 
 (defvar wallabag-full-entries nil
   "List of the all entries currently on database.")
@@ -688,7 +693,7 @@ TAGS are seperated by comma."
 (defun wallabag-browse-url()
   "Browser entry with original url."
   (interactive)
-  (browse-url
+  (funcall wallabag-browser-function
    (alist-get
     'url
     (or
@@ -899,13 +904,13 @@ Argument EVENT mouse event."
         (error "No URL chosen"))
     (with-current-buffer (window-buffer window)
       (goto-char pos)
-      (browse-url (get-text-property (point) 'help-echo)))))
+      (funcall wallabag-browser-function (get-text-property (point) 'help-echo)))))
 
 (defun wallabag-ret ()
   "Browser the url with keyboad RET."
   (interactive)
   ;; (message "click mouse-3")
-  (browse-url (get-text-property (point) 'help-echo)))
+  (funcall wallabag-browser-function (get-text-property (point) 'help-echo)))
 
 (defun wallabag-view ()
   "View the wallabag entry."
@@ -963,8 +968,25 @@ Argument EVENT mouse event."
       (insert-file-contents wallabag-css-file)
       (goto-char (point-max))
       (insert "</style>")
-      (require 'browse-url)
-      (browse-url-of-buffer))))
+      ;; hcak `browse-url-of-buffer'
+      (let ((file-name
+             ;; Ignore real name if restricted
+             (and (not (buffer-narrowed-p))
+                  (or buffer-file-name
+                      (and (boundp 'dired-directory) dired-directory)))))
+        (when (or (not file-name)
+                  ;; This can happen when we're looking at a file from a
+                  ;; zip file buffer, for instance.
+                  (not (file-exists-p file-name)))
+          (unless browse-url-temp-file-name
+            (setq browse-url-temp-file-name
+                  (convert-standard-filename
+                   (make-temp-file
+                    (expand-file-name "burl" browse-url-temp-dir)
+                    nil ".html"))))
+          (setq file-name browse-url-temp-file-name)
+          (write-region (point-min) (point-max) file-name nil 'no-message))
+        (funcall wallabag-browser-function (browse-url-file-url file-name))))))
 
 (defun wallabag-parse-entry-as-string (entry)
   "Parse the wallabag ENTRY and return as string."

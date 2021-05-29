@@ -919,7 +919,7 @@ Argument EVENT mouse event."
                            (get-text-property (point-min) 'wallabag-entry nil))))
 
 (defun wallabag-browse-with-external-browser ()
-  "View the wallabag entry with `browse-url'."
+  "View the wallabag entry with `wallabag-browser-function'."
   (interactive)
   (let* ((entry (or (get-text-property (point) 'wallabag-entry nil)
                     (get-text-property (point-min) 'wallabag-entry nil)))

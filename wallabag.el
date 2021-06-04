@@ -372,7 +372,7 @@ I new entries are found, retrive the new entries and update the database."
                   (setq wallabag-retrieving-p nil))))))
 
 (defun wallabag-request-and-synchronize-entries(perpage arg)
-  "Request PERPAGE entries, entries that do not exist in the server will be deleted.
+  "Request and synchronize `wallabag-number-of-entries-to-be-synchronized' entries, entries that do not exist in the server will be deleted.
 If with prefix, prompt the user to input number of entries to be
 retrieved."
   (interactive (list (if wallabag-db-newp
@@ -396,7 +396,7 @@ retrieved."
                 ("page" . ,page)
                 ("perPage" . ,(if arg
                                   (setq perpage
-                                        (let ((num (string-to-number (read-from-minibuffer "How many articles you want to retrieve? ") )))
+                                        (let ((num (string-to-number (read-from-minibuffer "How many articles you want to synchronize? ") )))
                                           (if (= num 0) wallabag-number-of-entries-to-be-synchronized num)))
                                 perpage ))
                 ("access_token" . ,token))
@@ -430,7 +430,7 @@ retrieved."
                   ;; insert new entries retried from wallabag server
                   (wallabag-db-insert entries)
                   (setq wallabag-db-newp nil)
-                  (message "Retrived the latest %s articles." (length entries))
+                  (message "Synchronized the latest %s articles." (length entries))
 
                   (with-silent-modifications
                     (wallabag-request-tags)
@@ -1254,7 +1254,7 @@ Argument EVENT mouse event."
 (defun wallabag-search-synchronize-and-clear-filter ()
   "Synchronize entries, clear the filter keyword, and update *wallabag-search*."
   (interactive)
-  (call-interactively 'wallabag-request-new-entries)
+  (call-interactively 'wallabag-request-and-synchronize-entries)
   (message "Synchronizing articles from wallabag host %s ..." wallabag-host))
 
 ;;; wallabag-entry-mode

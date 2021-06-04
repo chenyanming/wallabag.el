@@ -95,51 +95,47 @@ Wallabag will not download the images, but using Emacs [[https://www.gnu.org/sof
 
 * Keybindings
 Start with ~M-x wallabag~. 
-For the first time you connect to server, you need to press ~u~, then input the number of articles you want to retrieve from the server.
-Afterwards, the number of entries is controlled by ~wallabag-number-of-entries-to-be-retrieved~, default is 50. 
+For the first time you connect to server, you need to press ~u~ to synchronize.
 
 PS: 
-1. Network quality impacts the retrieving time. Keep ~wallabag-number-of-entries-to-be-retrieved~ as small as possible to decrease the retrieving time.
-2. This package is not smart enough to know how many unretrieved entries (will be improved in
-   the future). Please make sure the ~wallabag-number-of-entries-to-be-retrieved~ is larger than
-   the total number of unretrieved entries.
-3. The synchronization algorithm is still on development, if you want to keep local database always updated, please use ~wallabag-full-update~.
-4. ~wallabag-full-update~ will always ask you to input the number of entries you want to retrieve.
+1. The synchronization algorithm is still on development, if you want to keep local database always updated, please use ~wallabag-full-update~.
 
 ** Functions can be used outside wallabag related modes
-| wallabag                 | Enter ~*wallabag-search*~ buffer.                                                                        |
-| wallabag-find            | Select wallabag entries from a list with ivy.                                                          |
-| wallabag-full-update     | Perform a full database update. It can always keep the local database updated.                         |
-| wallabag-request-token   | Request a new token.                                                                                   |
-| wallabag-add-entry       | Add one entry to wallabag server, with URL and TAGS                                                    |
-| wallabag-insert-entry    | Insert an entry to wallabag server with current buffer content (behavior may be changed in the future) |
-| wallabag-request-entries | Retrieve the latest ~wallabag-number-of-entries-to-be-retrieved~ entries in the background.              |
+| wallabag                                 | Enter ~*wallabag-search*~ buffer.                                                                        |
+| wallabag-find                            | Select wallabag entries from a list with ivy.                                                          |
+| wallabag-full-update                     | Perform a full database update. It can always keep the local database updated.                         |
+| wallabag-request-token                   | Request a new token.                                                                                   |
+| wallabag-add-entry                       | Add one entry to wallabag server, with URL and TAGS                                                    |
+| wallabag-insert-entry                    | Insert an entry to wallabag server with current buffer content (behavior may be changed in the future) |
+| wallabag-request-new-entries             | Retrieve the new entries in the background.                                                            |
+| wallabag-request-and-synchronize-entries | Retrieve and synchronize entries, controlled by ~wallabag-number-of-entries-to-be-synchronized~.         |
 
 ** wallabag-search-mode
 
-    | <RET>                 | wallabag-view                            | View the wallabag entry.                                             |
-    | v                     | wallabag-view                            | View the wallabag entry.                                             |
-    | V                     | wallabag-browse-url                      | Browse the url of current wallabag entry.                            |
-    | o                     | wallabag-original-entry                  | Open the original html rendered wallabag entry.                      |
-    | s (non-evil), /(evil) | wallabag-search-live-filter              | Filter the ~*wallabag-search*~ buffer.                                 |
-    | q                     | wallabag-search-quit                     | Quit ~*wallabag-entry*~ then ~*wallabag-search*~ and ~*wallabag-sidebar*~. |
-    | g (non-evil), r(evil) | wallabag-search-refresh-and-clear-filter | Refresh wallabag and clear the filter keyword.                       |
-    | G (non-evil), R(evil) | wallabag-search-clear-filter             | Clear the filter keyword.                                            |
-    | u                     | wallabag-search-update-and-clear-filter  | Request entries and clear the filter keyword.                        |
-    | m                     | wallabag-mark-and-forward                | Mark entry and forward.                                              |
-    | <DEL>                 | wallabag-unmark-and-backward             | Unmark entry and backword.                                           |
-    | a                     | wallabag-add-entry                       | Add an entry.                                                        |
-    | d                     | wallabag-delete-entry                    | Delete an entry.                                                     |
-    | n(non-evil), j(evil)  | wallabag-next-entry                      | Move to next entry.                                                  |
-    | p(non-evil), k(evil)  | wallabag-previous-entry                  | Move to previous entry.                                              |
-    | w(non-evil), y(evil)  | wallabag-org-link-copy                   | Copy marked entries as org links.                                    |
-    | t                     | wallabag-add-tags                        | Add tags (seperated by comma) to entry at point.                     |
-    | T                     | wallabag-remove-tag                      | Remove one tag from list.                                            |
-    | '                     | wallabag-toggle-sidebar                  | Toggle sidebar.                                                      |
-    | x                     | wallabag-update-entry-archive            | Toggle archive (Read/Unread).                                        |
-    | f                     | wallabag-update-entry-starred            | Toggle star (favorites).                                             |
-    | i                     | wallabag-update-entry-title              | Update title.                                                        |
-    | I                     | wallabag-update-entry-origin_url         | Update origin url (from where you found it).                         |
+    | <RET>                 | wallabag-view                                | View the wallabag entry.                                                   |
+    | v                     | wallabag-view                                | View the wallabag entry.                                                   |
+    | V                     | wallabag-browse-url                          | Browse the url of current wallabag entry.                                  |
+    | o                     | wallabag-original-entry                      | Open the original html rendered wallabag entry.                            |
+    | s (non-evil), /(evil) | wallabag-search-live-filter                  | Filter the ~*wallabag-search*~ buffer.                                       |
+    | q                     | wallabag-search-quit                         | Quit ~*wallabag-entry*~ then ~*wallabag-search*~ and ~*wallabag-sidebar*~.       |
+    | g (non-evil), r(evil) | wallabag-search-refresh-and-clear-filter     | Refresh wallabag and clear the filter keyword.                             |
+    | G (non-evil), R(evil) | wallabag-search-clear-filter                 | Clear the filter keyword.                                                  |
+    | u                     | wallabag-search-update-and-clear-filter      | Request new entries, clear the filter keyword, and update *wallabag-search*. |
+    | U                     | wallabag-search-synchronize-and-clear-filter | Synchronize entries, clear the filter keyword, and update *wallabag-search*. |
+    | m                     | wallabag-mark-and-forward                    | Mark entry and forward.                                                    |
+    | <DEL>                 | wallabag-unmark-and-backward                 | Unmark entry and backword.                                                 |
+    | a                     | wallabag-add-entry                           | Add an entry.                                                              |
+    | d                     | wallabag-delete-entry                        | Delete an entry.                                                           |
+    | n(non-evil), j(evil)  | wallabag-next-entry                          | Move to next entry.                                                        |
+    | p(non-evil), k(evil)  | wallabag-previous-entry                      | Move to previous entry.                                                    |
+    | w(non-evil), y(evil)  | wallabag-org-link-copy                       | Copy marked entries as org links.                                          |
+    | t                     | wallabag-add-tags                            | Add tags (seperated by comma) to entry at point.                           |
+    | T                     | wallabag-remove-tag                          | Remove one tag from list.                                                  |
+    | '                     | wallabag-toggle-sidebar                      | Toggle sidebar.                                                            |
+    | x                     | wallabag-update-entry-archive                | Toggle archive (Read/Unread).                                              |
+    | f                     | wallabag-update-entry-starred                | Toggle star (favorites).                                                   |
+    | i                     | wallabag-update-entry-title                  | Update title.                                                              |
+    | I                     | wallabag-update-entry-origin_url             | Update origin url (from where you found it).                               |
 
 ** wallabag-entry-mode
     | r       | wallabag-view           | Refresh wallabag entry.                         |
@@ -160,5 +156,12 @@ PS:
     | q                     | wallabag-sidebar-quit              | Quit sidebar.             |
 
 * Change logs
+** =2021-04-13=
+Version *1.1.0*:
+- Add ~wallabag-request-new-entries~. It only retrieves and update the new entries.
+- Add ~wallabag-search-synchronize-and-clear-filter~, and bind to ~U~.
+- Rename ~wallabag-request-entries~ to ~wallabag-request-and-synchronize-entries~.
+- Rename ~wallabag-number-of-entries-to-be-retrieved~ to ~wallabag-number-of-entries-to-be-synchronized~.
+
 ** =2021-04-13=
 Version *1.0.0*:

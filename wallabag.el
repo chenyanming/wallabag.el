@@ -6,7 +6,7 @@
 ;; URL: https://github.com/chenyanming/wallabag.el
 ;; Keywords: tools
 ;; Created: 13 April 2021
-;; Version: 1.0.0
+;; Version: 1.1.0
 ;; Package-Requires: ((emacs "25.1") (request "0.3.3") (emacsql "3.0.0"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -116,8 +116,11 @@
   :type 'boolean)
 
 
-(defcustom wallabag-number-of-entries-to-be-retrieved 50
-  "Number of entries to be retrieved when run `wallabag-request-entries'."
+(define-obsolete-variable-alias 'wallabag-number-of-entries-to-be-retrieved
+  'wallabag-number-of-entries-to-be-synchronized "wallabag 1.1.0")
+
+(defcustom wallabag-number-of-entries-to-be-synchronized 50
+  "Number of entries to be retrieved when run `wallabag-request-and-synchronize-entries'."
   :group 'wallabag
   :type 'integer)
 
@@ -262,14 +265,120 @@ When live editing the filter, it is bound to :live.")
                   (setq wallabag-user-updated-at (assoc-default 'updated_at data))
                   (message "Request User Info Done."))))))
 
-(defun wallabag-request-entries(perpage arg)
+(define-obsolete-function-alias 'wallabag-request-entries
+  'wallabag-request-and-synchronize-entries "wallabag 1.1.0")
+
+(defun wallabag-request-new-entries ()
+  "Request one dummy entry from server and compare with latest one entry in database if it has new entries or not.
+I new entries are found, retrive the new entries and update the database."
+  (interactive)
+  (setq wallabag-retrieving-p t)
+  (let ((host wallabag-host)
+        (token (or wallabag-token (wallabag-request-token)))
+        (sort "created")
+        (order "desc")
+        (page 1)
+        current
+        position)
+    (request (format "%s/api/entries.json" host)
+      :parser 'buffer-string
+      :params `(("sort" . ,sort)
+                ("order" . ,order)
+                ("page" . ,page)
+                ("perPage" . 1)
+                ("access_token" . ,token))
+      :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
+                 ("Content-Type" . "application/json"))
+      :error
+      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
+                     ;; one of error is token expires
+                     (setq wallabag-token nil)))
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
+                  (let* ((latest-id (alist-get 'id (car entries)))
+                         (max-id (or (caar (wallabag-db-sql `[:select id :from items :order :by id :desc :limit 1])) 0))
+                         (number-of-retrieved (- latest-id max-id)))
+                    (pcase number-of-retrieved
+                      (0
+                       (message "No New Entries")
+                       (setq wallabag-retrieving-p nil))
+                      (_
+                       ;; (message "Found there may have %s new articles." number-of-retrieved)
+                       (wallabag-request-and-insert-entries number-of-retrieved)))))))))
+
+(defun wallabag-request-and-insert-entries(perpage)
+  "Request PERPAGE entries and insert them to database if request succeeds."
+  (let ((host wallabag-host)
+        (token (or wallabag-token (wallabag-request-token)))
+        (sort "created")
+        (order "desc")
+        (page 1)
+        current
+        position)
+    (request (format "%s/api/entries.json" host)
+      :parser 'buffer-string
+      :params `(("sort" . ,sort)
+                ("order" . ,order)
+                ("page" . ,page)
+                ("perPage" . ,perpage)
+                ("access_token" . ,token))
+      :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
+                 ("Content-Type" . "application/json"))
+      :error
+      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
+                     ;; one of error is token expires
+                     (setq wallabag-token nil)
+                     (setq wallabag-retrieving-p nil)))
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  ;; save the original string
+                  ;; (with-temp-file wallabag-json-file
+                  ;;   (insert data))
+                  (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
+                  (setq entries (cl-loop for entry in entries collect
+                                         (progn
+                                           ;; push a new tag column into it
+                                           (push
+                                            (cons
+                                             'tag
+                                             (wallabag-convert-tags-to-tag entry)) entry)
+                                           ;; return entry
+                                           entry)))
+
+                  ;; insert new entries retried from wallabag server
+                  (wallabag-db-insert entries)
+                  (setq wallabag-db-newp nil)
+                  (message "Retrived the latest %s articles." (length entries))
+
+                  ;; refresh dashboard
+                  (with-silent-modifications
+                    (wallabag-request-tags)
+                    (with-current-buffer (wallabag-search-buffer)
+                      (setq wallabag-search-filter "")
+                      (setq current (point))
+                      (setq position (window-start))
+                      (erase-buffer)
+                      (setq wallabag-search-entries (nreverse (wallabag-db-select)))
+                      (setq wallabag-full-entries wallabag-search-entries)
+                      (unless (equal wallabag-full-entries '("")) ; not empty list
+                        (cl-loop for entry in wallabag-full-entries do
+                                 (funcall wallabag-search-print-entry-function entry)))
+                      (wallabag-search-mode)
+                      (set-window-start (selected-window) position)
+                      (goto-char current)))
+
+                  ;; indicate the retrieving is finished, and update the header
+                  (setq wallabag-retrieving-p nil))))))
+
+(defun wallabag-request-and-synchronize-entries(perpage arg)
   "Request PERPAGE entries, entries that do not exist in the server will be deleted.
 If with prefix, prompt the user to input number of entries to be
 retrieved."
   (interactive (list (if wallabag-db-newp
                          (let ((num (string-to-number (read-from-minibuffer "How many articles you want to retrieve? ") )))
-                           (if (= num 0) wallabag-number-of-entries-to-be-retrieved num))
-                       wallabag-number-of-entries-to-be-retrieved)
+                           (if (= num 0) wallabag-number-of-entries-to-be-synchronized num))
+                       wallabag-number-of-entries-to-be-synchronized)
                      current-prefix-arg))
   ;; indicate it is retrieving.
   (setq wallabag-retrieving-p t)
@@ -288,7 +397,7 @@ retrieved."
                 ("perPage" . ,(if arg
                                   (setq perpage
                                         (let ((num (string-to-number (read-from-minibuffer "How many articles you want to retrieve? ") )))
-                                          (if (= num 0) wallabag-number-of-entries-to-be-retrieved num)))
+                                          (if (= num 0) wallabag-number-of-entries-to-be-synchronized num)))
                                 perpage ))
                 ("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
@@ -802,6 +911,7 @@ TAGS are seperated by comma."
     (define-key map "g" #'wallabag-search-refresh-and-clear-filter)
     (define-key map "G" #'wallabag-search-clear-filter)
     (define-key map "u" #'wallabag-search-update-and-clear-filter)
+    (define-key map "U" #'wallabag-search-synchronize-and-clear-filter)
     (define-key map "m" #'wallabag-mark-and-forward)
     (define-key map (kbd "<DEL>") #'wallabag-unmark-and-backward)
     (define-key map "a" #'wallabag-add-entry)
@@ -831,6 +941,7 @@ TAGS are seperated by comma."
       (kbd "g r") 'wallabag-search-clear-filter
       (kbd "g R") 'wallabag-search-refresh-and-clear-filter
       (kbd "u") 'wallabag-search-update-and-clear-filter
+      (kbd "U") 'wallabag-search-synchronize-and-clear-filter
       (kbd "m") 'wallabag-mark-and-forward
       (kbd "<DEL>") 'wallabag-unmark-and-backward
       (kbd "a") 'wallabag-add-entry
@@ -875,15 +986,8 @@ TAGS are seperated by comma."
                   wallabag-search-entries
                 (progn
                   (wallabag-request-tags)
-                  (setq wallabag-search-entries (nreverse (wallabag-db-select) ))
-                  ;; (if (file-exists-p wallabag-json-file)
-                  ;;     (setq wallabag-search-entries (append (wallabag-parse-json (json-read-file wallabag-json-file)) nil))
-                  ;;   (setq wallabag-search-entries (append (wallabag-request-entries) nil)))
-                  ;; convert all entries's tags to string
-
-                  (setq wallabag-full-entries wallabag-search-entries)
-                  ;; reqeust all tags
-                  ))))
+                  (setq wallabag-search-entries (nreverse (wallabag-db-select)))
+                  (setq wallabag-full-entries wallabag-search-entries)))))
     (unless (equal cands '(""))   ; not empty list
       (cl-loop for entry in cands do
                (funcall wallabag-search-print-entry-function entry))
@@ -1142,10 +1246,16 @@ Argument EVENT mouse event."
   (wallabag))
 
 (defun wallabag-search-update-and-clear-filter ()
-  "Refresh wallabag and clear the filter keyword."
+  "Request new entries, clear the filter keyword, and update *wallabag-search*."
   (interactive)
-  (call-interactively 'wallabag-request-entries)
-  (message "Retriving articles from wallabag host %s ..." wallabag-host))
+  (call-interactively 'wallabag-request-new-entries)
+  (message "Retriving new articles from wallabag host %s ..." wallabag-host))
+
+(defun wallabag-search-synchronize-and-clear-filter ()
+  "Synchronize entries, clear the filter keyword, and update *wallabag-search*."
+  (interactive)
+  (call-interactively 'wallabag-request-new-entries)
+  (message "Synchronizing articles from wallabag host %s ..." wallabag-host))
 
 ;;; wallabag-entry-mode
 

@@ -76,7 +76,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
   )
 #+end_src
 
-** use-package (Stright)
+** use-package (Straight)
 #+begin_src emacs-lisp
 (use-package wallabag
   :straight (:host github :repo "chenyanming/wallabag.el" :files ("*.el" "*.alist" "*.css")))

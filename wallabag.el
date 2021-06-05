@@ -119,11 +119,16 @@
 (define-obsolete-variable-alias 'wallabag-number-of-entries-to-be-retrieved
   'wallabag-number-of-entries-to-be-synchronized "wallabag 1.1.0")
 
-(defcustom wallabag-number-of-entries-to-be-synchronized 50
-  "Number of entries to be retrieved when run `wallabag-request-and-synchronize-entries'."
+(defcustom wallabag-number-of-entries-to-be-synchronized -1
+  "When runs `wallabag-request-and-synchronize-entries', first it will retrieve all new entries and insert to local database.
+Then it will call `wallabag-request-and-delete-entries' and check
+`wallabag-number-of-entries-to-be-synchronized' entries. The
+entries do not exist in server will be deleted.
+
+If -1, all entries will be checked.
+If set to N (N > 0), N entries will be checked."
   :group 'wallabag
   :type 'integer)
-
 
 (defcustom wallabag-starred-icon "★"
   "The starred icon."
@@ -272,7 +277,7 @@ When live editing the filter, it is bound to :live.")
   "Request one dummy entry from server and compare with latest one entry in database if it has new entries or not.
 I new entries are found, retrive the new entries and update the database."
   (interactive)
-  (setq wallabag-retrieving-p t)
+  (setq wallabag-retrieving-p "Updating...")
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
@@ -307,8 +312,9 @@ I new entries are found, retrive the new entries and update the database."
                        ;; (message "Found there may have %s new articles." number-of-retrieved)
                        (wallabag-request-and-insert-entries number-of-retrieved)))))))))
 
-(defun wallabag-request-and-insert-entries(perpage)
-  "Request PERPAGE entries and insert them to database if request succeeds."
+(defun wallabag-request-and-insert-entries(perpage &optional callback args)
+  "Request PERPAGE entries and insert them to database if request succeeds.
+Call CALLBACK with ARGS."
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
@@ -369,19 +375,18 @@ I new entries are found, retrive the new entries and update the database."
                       (goto-char current)))
 
                   ;; indicate the retrieving is finished, and update the header
-                  (setq wallabag-retrieving-p nil))))))
+                  (setq wallabag-retrieving-p nil)
 
-(defun wallabag-request-and-synchronize-entries(perpage arg)
-  "Request and synchronize `wallabag-number-of-entries-to-be-synchronized' entries, entries that do not exist in the server will be deleted.
-If with prefix, prompt the user to input number of entries to be
-retrieved."
-  (interactive (list (if wallabag-db-newp
-                         (let ((num (string-to-number (read-from-minibuffer "How many articles you want to retrieve? ") )))
-                           (if (= num 0) wallabag-number-of-entries-to-be-synchronized num))
-                       wallabag-number-of-entries-to-be-synchronized)
-                     current-prefix-arg))
-  ;; indicate it is retrieving.
-  (setq wallabag-retrieving-p t)
+                  ;; call the callback
+                  (if callback
+                      (funcall callback args)))))))
+
+(defun wallabag-request-and-synchronize-entries ()
+  "Request and synchronize wallabag server.
+1. Request the new entries and insert to local database.
+2. Verify `wallabag-number-of-entries-to-be-synchronized' entries, entries do not exist in server will be deleted."
+  (interactive)
+  (setq wallabag-retrieving-p "Updating...")
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
@@ -394,11 +399,47 @@ retrieved."
       :params `(("sort" . ,sort)
                 ("order" . ,order)
                 ("page" . ,page)
-                ("perPage" . ,(if arg
-                                  (setq perpage
-                                        (let ((num (string-to-number (read-from-minibuffer "How many articles you want to synchronize? ") )))
-                                          (if (= num 0) wallabag-number-of-entries-to-be-synchronized num)))
-                                perpage ))
+                ("perPage" . 1)
+                ("access_token" . ,token))
+      :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
+                 ("Content-Type" . "application/json"))
+      :error
+      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
+                     ;; one of error is token expires
+                     (setq wallabag-token nil)))
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
+                  (let* ((latest-id (alist-get 'id (car entries)))
+                         (max-id (or (caar (wallabag-db-sql `[:select id :from items :order :by id :desc :limit 1])) 0))
+                         (number-of-retrieved (- latest-id max-id)))
+                    (pcase number-of-retrieved
+                      (0
+                       (message "No New Entries in server, verifing entries in local database.")
+                       (wallabag-request-and-delete-entries max-id))
+                      (_
+                       ;; (message "Found there may have %s new articles." number-of-retrieved)
+                       (wallabag-request-and-insert-entries number-of-retrieved 'wallabag-request-and-delete-entries max-id)))))))))
+
+(defun wallabag-request-and-delete-entries(perpage)
+  "Request and check `wallabag-number-of-entries-to-be-synchronized' entries, entries that do not exist in the server will be deleted.
+Please notice: this function should be called only when no new entires in the server!"
+  (setq wallabag-retrieving-p "Verifing...") ; indicate it is retrieving.
+  (let ((host wallabag-host)
+        (token (or wallabag-token (wallabag-request-token)))
+        (sort "created")
+        (order "desc")
+        (page 1)
+        current
+        position)
+    (request (format "%s/api/entries.json" host)
+      :parser 'buffer-string
+      :params `(("sort" . ,sort)
+                ("order" . ,order)
+                ("page" . ,page)
+                ("perPage" . ,(if (> wallabag-number-of-entries-to-be-synchronized 0)
+                                  wallabag-number-of-entries-to-be-synchronized
+                                perpage))
                 ("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
                  ("Content-Type" . "application/json"))
@@ -421,16 +462,17 @@ retrieved."
                                              (wallabag-convert-tags-to-tag entry)) entry)
                                            ;; return entry
                                            entry)))
-                  ;; delete the non exist entries replied from wallabag server
-                  (wallabag-db-delete (vconcat (cl-set-difference
-                                                (cl-loop for item in (wallabag-db-sql `[:select id :from items :order :by id :desc :limit ,perpage]) collect
-                                                         (car item))
-                                                (cl-loop for entry in entries collect
-                                                         (alist-get 'id entry)))))
-                  ;; insert new entries retried from wallabag server
-                  (wallabag-db-insert entries)
-                  (setq wallabag-db-newp nil)
-                  (message "Synchronized the latest %s articles." (length entries))
+                  (let* ((to-be-deleted (vconcat (cl-set-difference
+                                                  (cl-loop for item in (wallabag-db-sql `[:select id :from items :order :by id :desc :limit ,perpage]) collect
+                                                           (car item))
+                                                  (cl-loop for entry in entries collect
+                                                           (alist-get 'id entry)))))
+                         (number-to-be-deleted (length to-be-deleted)))
+                    ;; delete the non exist entries replied from wallabag server
+                    (wallabag-db-delete to-be-deleted)
+
+                    (setq wallabag-db-newp nil)
+                    (message "Deleted %s articles." number-to-be-deleted))
 
                   (with-silent-modifications
                     (wallabag-request-tags)
@@ -881,7 +923,7 @@ TAGS are seperated by comma."
           (propertize (format "%s" wallabag-host) 'face font-lock-type-face)
           (concat
            (if wallabag-retrieving-p
-               (propertize "Updating..." 'face font-lock-warning-face)
+               (propertize wallabag-retrieving-p 'face font-lock-warning-face)
                (propertize (format "Total: %s"
                                    (if (equal wallabag-search-entries '(""))
                                        "0   "

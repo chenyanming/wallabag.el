@@ -8,6 +8,7 @@
 - [[#features][Features]]
 - [[#installation-and-configuration][Installation and Configuration]]
 - [[#image-caching][Image Caching]]
+- [[#retrive-new-entries-after-m-x-wallabag][Retrive new entries after =M-x wallabag=]]
 - [[#keybindings][Keybindings]]
 - [[#change-logs][Change logs]]
 
@@ -91,6 +92,11 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 Wallabag will not download the images, but using Emacs [[https://www.gnu.org/software/emacs/manual/html_node/url/Disk-Caching.html][disk caching]] capability. Setting ~url-automatic-caching~ non-nil causes documents to be cached automatically.
 #+begin_src emacs-lisp
 (setq url-automatic-caching t)
+#+end_src
+
+* Retrive new entries after =M-x wallabag=
+#+begin_src emacs-lisp
+(add-hook 'wallabag-after-render-hook 'wallabag-search-update-and-clear-filter)
 #+end_src
 
 * Keybindings

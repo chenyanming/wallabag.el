@@ -278,7 +278,9 @@ When live editing the filter, it is bound to :live.")
 
 (defun wallabag-request-new-entries ()
   "Request one dummy entry from server and compare with latest one entry in database if it has new entries or not.
-I new entries are found, retrive the new entries and update the database."
+If new entries are found, retrive the new entries and update the
+database, and delete the latest entires if they have been deleted
+in server."
   (interactive)
   (setq wallabag-retrieving-p "Updating...")
   (let ((host wallabag-host)

@@ -239,9 +239,8 @@ When live editing the filter, it is bound to :live.")
       :params `(("access_token" . ,token))
       :headers '(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq wallabag-appname (assoc-default 'appname data))
@@ -259,9 +258,8 @@ When live editing the filter, it is bound to :live.")
       :params `(("access_token" . ,token))
       :headers '(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq wallabag-user-id (assoc-default 'id data))
@@ -332,9 +330,8 @@ Call CALLBACK with ARGS."
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
                  ("Content-Type" . "application/json"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)
                      (setq wallabag-retrieving-p nil)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
@@ -444,9 +441,8 @@ Please notice: this function should be called only when no new entires in the se
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
                  ("Content-Type" . "application/json"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; save the original string
@@ -505,9 +501,8 @@ Please notice: this function should be called only when no new entires in the se
       :params `(("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key response &allow-other-keys)
                   (message "Done: %s" (request-response-header response "content-type"))
@@ -530,8 +525,8 @@ Please notice: this function should be called only when no new entires in the se
       :params `(("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let ((tag-list (mapcar
@@ -580,9 +575,8 @@ TAGS are seperated by comma."
                 ("tags" . ,tags))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let* ((inhibit-read-only t)
@@ -629,9 +623,8 @@ TAGS are seperated by comma."
       :data `(("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let* ((inhibit-read-only t)
@@ -668,9 +661,8 @@ TAGS are seperated by comma."
               ("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; convert tags array to tag comma seperated string
@@ -721,9 +713,8 @@ TAGS are seperated by comma."
               ("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                     ;; one of error is token expires
-                     (setq wallabag-token nil)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; convert tags array to tag comma seperated string
@@ -762,9 +753,8 @@ TAGS are seperated by comma."
           :data `(("access_token" . ,token))
           :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
           :error
-          (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)
-                         ;; one of error is token expires
-                         (setq wallabag-token nil)))
+          (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                         (message "Wallaget request error: %S" error-thrown)))
           :success (cl-function
                     (lambda (&key _data &allow-other-keys)
                       (let ((inhibit-read-only t))
@@ -801,9 +791,7 @@ TAGS are seperated by comma."
           :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
           :error
           (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
-                         ;; one of error is token expires
-                         (message "%s" error-thrown)
-                         (setq wallabag-token nil)))
+                         (message "Wallaget request error: %S" error-thrown)))
           :success (cl-function
                     (lambda (&key data &allow-other-keys)
                       (let* ((inhibit-read-only t)
@@ -833,7 +821,8 @@ TAGS are seperated by comma."
       :parser 'buffer-string
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error
-      (cl-function (lambda (&rest args &key _error-thrown &allow-other-keys)))
+      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                     (message "Wallaget request error: %S" error-thrown)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (wallabag-show-entry

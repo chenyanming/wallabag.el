@@ -477,8 +477,12 @@ Please notice: this function should be called only when no new entires in the se
                     (wallabag-db-delete to-be-deleted)
 
                     (setq wallabag-db-newp nil)
-                    (message "Deleted %s articles." number-to-be-deleted))
-
+                    (cond
+                     ((> number-to-be-deleted 0)
+                      (message "Finished synchronization. Deleted %s articles." number-to-be-deleted) )
+                     ((= number-to-be-deleted 0)
+                      (message "Finished synchronization."))
+                     (t (error "synchronization error: number-to-be-deleted is %s", number-to-be-deleted))))
                   (with-silent-modifications
                     (wallabag-request-tags)
                     (with-current-buffer (wallabag-search-buffer)

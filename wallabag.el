@@ -153,6 +153,11 @@ should change it to contain the rendered version of it."
   :type 'hook
   :group 'wallabag)
 
+(defcustom wallabag-after-render-hook nil
+  "A hook called after wallabag has finished rendering the buffer."
+  :group 'wallabag
+  :type 'hook)
+
 (defcustom wallabag-browser-function 'browse-url
   "Browser function used when opening wallabag entry."
   :type browse-url--browser-defcustom-type)
@@ -1019,19 +1024,20 @@ TAGS are seperated by comma."
   (switch-to-buffer (wallabag-search-buffer))
   (goto-char (point-min))
   (let ((cands (if wallabag-search-entries
-                  wallabag-search-entries
-                (progn
-                  (wallabag-request-tags)
-                  (setq wallabag-search-entries (nreverse (wallabag-db-select)))
-                  (setq wallabag-full-entries wallabag-search-entries)))))
-    (unless (equal cands '(""))   ; not empty list
+                   wallabag-search-entries
+                 (progn
+                   (wallabag-request-tags)
+                   (setq wallabag-search-entries (nreverse (wallabag-db-select)))
+                   (setq wallabag-full-entries wallabag-search-entries)))))
+    (unless (equal cands '(""))         ; not empty list
       (cl-loop for entry in cands do
                (funcall wallabag-search-print-entry-function entry))
       (goto-char (point-min)))
     (unless (eq major-mode 'wallabag-search-mode)
       (wallabag-search-mode))
     (if (and wallabag-show-sidebar wallabag-all-tags)
-        (wallabag-sidebar-create-window))))
+        (wallabag-sidebar-create-window))
+    (run-hooks 'wallabag-after-render-hook)))
 
 (defun wallabag-mouse-1 (event)
   "Browser the url click.

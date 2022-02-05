@@ -310,8 +310,7 @@ I new entries are found, retrive the new entries and update the database."
                      ((= number-of-retrieved 0)
                       (message "No New Entries")
                       (setq wallabag-retrieving-p nil))
-                     ((< number-of-retrieved 0)
-                      (message "%s entries to be deleted" (abs number-of-retrieved))
+                     ((< number-of-retrieved 0) ;; the actual number may be less than (abs number-of-retrieved)
                       (wallabag-request-and-delete-entries (abs number-of-retrieved)))
                      (t
                       ;; (message "Found there may have %s new articles." number-of-retrieved)
@@ -413,20 +412,20 @@ Call CALLBACK with ARGS."
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
+                  (setq total (wallabag-get-total (json-read-from-string data)))
                   (let* ((latest-id (alist-get 'id (car entries)))
                          (max-id (or (caar (wallabag-db-sql `[:select id :from items :order :by id :desc :limit 1])) 0))
                          (number-of-retrieved (- latest-id max-id)))
                     (cond
                      ((= number-of-retrieved 0)
                       ;; need to add one
-                      (message "No New Entries in server, verifing %s entries in local database." latest-id)
-                      (wallabag-request-and-delete-entries latest-id))
-                     ((< number-of-retrieved 0)
-                      (message "%s entries to be deleted" (abs number-of-retrieved))
+                      (message "No New Entries in server, verifing %s entries in local database..." total)
+                      (wallabag-request-and-delete-entries total))
+                     ((< number-of-retrieved 0) ;; the actual number may be less than (abs number-of-retrieved)
                       (wallabag-request-and-delete-entries (abs number-of-retrieved)))
                      (t
                       ;; (message "Found there may have %s new articles." number-of-retrieved)
-                      (wallabag-request-and-insert-entries number-of-retrieved 'wallabag-request-and-delete-entries max-id)))))))))
+                      (wallabag-request-and-insert-entries number-of-retrieved 'wallabag-request-and-delete-entries total)))))))))
 
 (defun wallabag-request-and-delete-entries(perpage)
   "Request and check `wallabag-number-of-entries-to-be-synchronized' entries, entries that do not exist in the server will be deleted.
@@ -898,6 +897,9 @@ TAGS are seperated by comma."
 
 (defun wallabag-parse-json (json)
   (alist-get 'items (assoc '_embedded json)))
+
+(defun wallabag-get-total (json)
+  (cdr (assoc 'total json)))
 
 ;;;###autoload
 (defun wallabag-find ()

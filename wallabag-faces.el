@@ -61,11 +61,11 @@
   '((((class color) (background light))
      (:foreground "#2e3440"
       :weight bold
-      :height 2.0))
+      :height 1.2))
     (((class color) (background dark))
      (:foreground "pale turquoise"
       :weight bold
-      :height 2.0))
+      :height 1.2))
     (t (:inherit default)))
   "Face used for title."
   :group 'wallabag-faces)

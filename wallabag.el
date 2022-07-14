@@ -318,73 +318,85 @@ in server."
                       ;; (message "Found there may have %s new articles." number-of-retrieved)
                       (wallabag-request-and-insert-entries number-of-retrieved)))))))))
 
-(defun wallabag-request-and-insert-entries(perpage &optional callback args)
-  "Request PERPAGE entries and insert them to database if request succeeds.
-Call CALLBACK with ARGS."
-  (let ((host wallabag-host)
-        (token (or wallabag-token (wallabag-request-token)))
-        (sort "created")
-        (order "desc")
-        (page 1)
-        current
-        position)
-    (request (format "%s/api/entries.json" host)
-      :parser 'buffer-string
-      :params `(("sort" . ,sort)
-                ("order" . ,order)
-                ("page" . ,page)
-                ("perPage" . ,perpage)
-                ("access_token" . ,token))
-      :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
-                 ("Content-Type" . "application/json"))
-      :error
-      (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
-                     (message "Wallaget request error: %S" error-thrown)
-                     (setq wallabag-retrieving-p nil)))
-      :success (cl-function
-                (lambda (&key data &allow-other-keys)
-                  ;; save the original string
-                  ;; (with-temp-file wallabag-json-file
-                  ;;   (insert data))
-                  (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
-                  (setq entries (cl-loop for entry in entries collect
-                                         (progn
-                                           ;; push a new tag column into it
-                                           (push
-                                            (cons
-                                             'tag
-                                             (wallabag-convert-tags-to-tag entry)) entry)
-                                           ;; return entry
-                                           entry)))
+(defun wallabag-request-and-insert-entries (num-entries &optional callback args page)
+  "Request NUM-ENTRIES entries and insert them to database if request succeeds.
 
-                  ;; insert new entries retried from wallabag server
-                  (wallabag-db-insert entries)
-                  (setq wallabag-db-newp nil)
-                  (message "Retrived the latest %s articles." (length entries))
+Call CALLBACK with ARGS.
 
-                  ;; refresh dashboard
-                  (with-silent-modifications
-                    (wallabag-request-tags)
-                    (with-current-buffer (wallabag-search-buffer)
-                      (setq wallabag-search-filter "")
-                      (setq current (point))
-                      (setq position (window-start))
-                      (erase-buffer)
-                      (setq wallabag-search-entries (nreverse (wallabag-db-select)))
-                      (setq wallabag-full-entries wallabag-search-entries)
-                      (unless (equal wallabag-full-entries '("")) ; not empty list
-                        (cl-loop for entry in wallabag-full-entries do
-                                 (funcall wallabag-search-print-entry-function entry)))
-                      (wallabag-search-mode)
-                      (set-window-start (selected-window) position)
-                      (goto-char current)))
+By default retrieval starts with the first page of results. With
+non-nil integer PAGE retrieval starts at this page."
+  (if (<= num-entries 0)
+      (message "No more entries to retrive.")
+    (let* ((host wallabag-host)
+           (token (or wallabag-token (wallabag-request-token)))
+           (sort "created")
+           (order "desc")
+           (perpage (min num-entries 30))
+           (page (or page 1))
+           current
+           position)
+      (request (format "%s/api/entries.json" host)
+        :parser 'buffer-string
+        :params `(("sort" . ,sort)
+                  ("order" . ,order)
+                  ("page" . ,page)
+                  ("perPage" . ,perpage)
+                  ("access_token" . ,token))
+        :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36")
+                   ("Content-Type" . "application/json"))
+        :error
+        (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
+                       (message "Wallaget request error: %S" error-thrown)
+                       (setq wallabag-retrieving-p nil)))
+        :success (cl-function
+                  (lambda (&key data &allow-other-keys)
+                    ;; save the original string
+                    ;; (with-temp-file wallabag-json-file
+                    ;;   (insert data))
+                    (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
+                    (setq entries (cl-loop for entry in entries collect
+                                           (progn
+                                             ;; push a new tag column into it
+                                             (push
+                                              (cons
+                                               'tag
+                                               (wallabag-convert-tags-to-tag entry)) entry)
+                                             ;; return entry
+                                             entry)))
 
-                  ;; indicate the retrieving is finished, and update the header
-                  (setq wallabag-retrieving-p nil)
+                    ;; insert new entries retried from wallabag server
+                    (wallabag-db-insert entries)
+                    (setq wallabag-db-newp nil)
+                    (message "Retrived the latest %s articles." (length entries))
 
-                  ;; call the callback
-                  (if callback
-                      (funcall callback args)))))))
+                    ;; refresh dashboard
+                    (with-silent-modifications
+                      (wallabag-request-tags)
+                      (with-current-buffer (wallabag-search-buffer)
+                        (setq wallabag-search-filter "")
+                        (setq current (point))
+                        (setq position (window-start))
+                        (erase-buffer)
+                        (setq wallabag-search-entries (nreverse (wallabag-db-select)))
+                        (setq wallabag-full-entries wallabag-search-entries)
+                        (unless (equal wallabag-full-entries '("")) ; not empty list
+                          (cl-loop for entry in wallabag-full-entries do
+                                   (funcall wallabag-search-print-entry-function entry)))
+                        (wallabag-search-mode)
+                        (set-window-start (selected-window) position)
+                        (goto-char current)))
+
+                    ;; indicate the retrieving is finished, and update the header
+                    (setq wallabag-retrieving-p nil)
+
+                    ;; call the callback
+                    (if callback
+                        (funcall callback args))
+                    
+                    (run-with-idle-timer
+                     4 nil
+                     #'wallabag-request-and-insert-entries
+                     (max 0 (- num-entries perpage)) callback args (1+ page))))))))
 
 (defun wallabag-request-and-synchronize-entries ()
   "Request and synchronize wallabag server.

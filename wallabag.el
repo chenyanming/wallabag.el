@@ -579,7 +579,7 @@ Please notice: this function should be called only when no new entires in the se
 (wallabag-full-entries-update "is_starred")
 (wallabag-full-entries-update "origin_url")
 
-(defun wallabag-add-tags(tags)
+(defun wallabag-add-tags (tags)
   "Add TAGS to the entry at point.
 TAGS are seperated by comma."
   (interactive (list
@@ -619,7 +619,7 @@ TAGS are seperated by comma."
                     (wallabag-request-tags)
                     (message "Add Tags Done")))))))
 
-(defun wallabag-remove-tag()
+(defun wallabag-remove-tag ()
   "Remove one tag of the entry."
   (interactive)
   (let* ((entry (get-text-property (point) 'wallabag-entry) )
@@ -667,7 +667,7 @@ TAGS are seperated by comma."
                     (wallabag-request-tags)
                     (message "Remove Tag Done")))))))
 
-(defun wallabag-add-entry(url tags)
+(defun wallabag-add-entry (url tags)
   "Add a new entry by URL and TAGS."
   (interactive (list
                 (read-from-minibuffer "What URL do you want to add? ")
@@ -716,7 +716,7 @@ TAGS are seperated by comma."
                           (funcall wallabag-search-print-entry-function data)))
                       (message "Add Entry Done"))))))))
 
-(defun wallabag-insert-entry(title tags)
+(defun wallabag-insert-entry (title tags)
   "TODO: Insert a entry by TITLE and TAGS, using current buffer."
   (interactive (list
                 (read-from-minibuffer "What TITLE do you want to add? " (buffer-name))
@@ -759,7 +759,7 @@ TAGS are seperated by comma."
                         (funcall wallabag-search-print-entry-function data)))
                     (message "Add Entry Done")))))))
 
-(defun wallabag-delete-entry()
+(defun wallabag-delete-entry ()
   "Delete a entry at point."
   (interactive)
   (let* ((entry (get-text-property (point) 'wallabag-entry) )
@@ -835,7 +835,7 @@ TAGS are seperated by comma."
 (wallabag-update-entry "starred" t)
 (wallabag-update-entry "origin_url" nil)
 
-(defun wallabag-original-entry()
+(defun wallabag-original-entry ()
   "Show entry rendered with original html."
   (interactive)
   (message "Retriving original page...")
@@ -853,7 +853,7 @@ TAGS are seperated by comma."
                     (get-text-property (point) 'wallabag-entry nil)
                     (get-text-property (point-min) 'wallabag-entry nil)) nil data))))))
 
-(defun wallabag-browse-url()
+(defun wallabag-browse-url ()
   "Browser entry with original url."
   (interactive)
   (funcall wallabag-browser-function
@@ -1186,7 +1186,7 @@ Argument EVENT mouse event."
             (propertize tag 'face 'wallabag-tag-face)
             (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))))
 
-(defun wallabag-parse-entries-as-list(filter)
+(defun wallabag-parse-entries-as-list (filter)
   "Parse all entries with FILTER, return as propertized string list."
   (cl-loop for entry in (wallabag-search-update-list filter) collect
            (propertize (wallabag-parse-entry-as-string entry) 'wallabag-entry entry)))

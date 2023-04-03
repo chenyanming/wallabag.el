@@ -980,7 +980,7 @@ TAGS are seperated by comma."
     (define-key map "T" #'wallabag-remove-tag)
     (define-key map "'" #'wallabag-toggle-sidebar)
     (define-key map "x" #'wallabag-update-entry-archive)
-    (define-key map "f" #'wallabag-update-entry-star)
+    (define-key map "f" #'wallabag-update-entry-starred)
     (define-key map "i" #'wallabag-update-entry-title)
     (define-key map "I" #'wallabag-update-entry-origin_url)
     map)

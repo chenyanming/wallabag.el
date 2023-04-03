@@ -287,9 +287,7 @@ in server."
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
-        (page 1)
-        current
-        position)
+        (page 1))
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -408,9 +406,7 @@ non-nil integer PAGE retrieval starts at this page."
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
-        (page 1)
-        current
-        position)
+        (page 1))
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)

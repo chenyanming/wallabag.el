@@ -94,7 +94,7 @@ Wallabag will not download the images, but using Emacs [[https://www.gnu.org/sof
 (setq url-automatic-caching t)
 #+end_src
 
-* Retrive new entries after =M-x wallabag=
+* Retrieve new entries after =M-x wallabag=
 #+begin_src emacs-lisp
 (add-hook 'wallabag-after-render-hook 'wallabag-search-update-and-clear-filter)
 #+end_src

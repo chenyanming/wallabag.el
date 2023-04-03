@@ -68,7 +68,7 @@
   :type 'string)
 
 (defcustom wallabag-secret ""
-  "Wallabag secret"
+  "Wallabag secret."
   :group 'wallabag
   :type 'string)
 
@@ -437,7 +437,7 @@ non-nil integer PAGE retrieval starts at this page."
                       ;; (message "Found there may have %s new articles." number-of-retrieved)
                       (wallabag-request-and-insert-entries number-of-retrieved 'wallabag-request-and-delete-entries total)))))))))
 
-(defun wallabag-request-and-delete-entries(perpage)
+(defun wallabag-request-and-delete-entries (perpage)
   "Request and check `wallabag-number-of-entries-to-be-synchronized' entries, entries that do not exist in the server will be deleted.
 Please notice: this function should be called only when no new entires in the server!"
   (setq wallabag-retrieving-p "Verifing...") ; indicate it is retrieving.
@@ -492,7 +492,7 @@ Please notice: this function should be called only when no new entires in the se
                       (message "Finished synchronization. Deleted %s articles." number-to-be-deleted) )
                      ((= number-to-be-deleted 0)
                       (message "Finished synchronization."))
-                     (t (error "synchronization error: number-to-be-deleted is %s", number-to-be-deleted))))
+                     (t (error "Synchronization error: number-to-be-deleted is %s", number-to-be-deleted))))
                   (with-silent-modifications
                     (wallabag-request-tags)
                     (with-current-buffer (wallabag-search-buffer)

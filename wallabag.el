@@ -68,7 +68,7 @@
   :type 'string)
 
 (defcustom wallabag-secret ""
-  "Wallabag secret"
+  "Wallabag secret."
   :group 'wallabag
   :type 'string)
 
@@ -287,9 +287,7 @@ in server."
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
-        (page 1)
-        current
-        position)
+        (page 1))
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -408,9 +406,7 @@ non-nil integer PAGE retrieval starts at this page."
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
-        (page 1)
-        current
-        position)
+        (page 1))
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -441,7 +437,7 @@ non-nil integer PAGE retrieval starts at this page."
                       ;; (message "Found there may have %s new articles." number-of-retrieved)
                       (wallabag-request-and-insert-entries number-of-retrieved 'wallabag-request-and-delete-entries total)))))))))
 
-(defun wallabag-request-and-delete-entries(perpage)
+(defun wallabag-request-and-delete-entries (perpage)
   "Request and check `wallabag-number-of-entries-to-be-synchronized' entries, entries that do not exist in the server will be deleted.
 Please notice: this function should be called only when no new entires in the server!"
   (setq wallabag-retrieving-p "Verifing...") ; indicate it is retrieving.
@@ -496,7 +492,7 @@ Please notice: this function should be called only when no new entires in the se
                       (message "Finished synchronization. Deleted %s articles." number-to-be-deleted) )
                      ((= number-to-be-deleted 0)
                       (message "Finished synchronization."))
-                     (t (error "synchronization error: number-to-be-deleted is %s", number-to-be-deleted))))
+                     (t (error "Synchronization error: number-to-be-deleted is %s", number-to-be-deleted))))
                   (with-silent-modifications
                     (wallabag-request-tags)
                     (with-current-buffer (wallabag-search-buffer)
@@ -583,7 +579,7 @@ Please notice: this function should be called only when no new entires in the se
 (wallabag-full-entries-update "is_starred")
 (wallabag-full-entries-update "origin_url")
 
-(defun wallabag-add-tags(tags)
+(defun wallabag-add-tags (tags)
   "Add TAGS to the entry at point.
 TAGS are seperated by comma."
   (interactive (list
@@ -623,7 +619,7 @@ TAGS are seperated by comma."
                     (wallabag-request-tags)
                     (message "Add Tags Done")))))))
 
-(defun wallabag-remove-tag()
+(defun wallabag-remove-tag ()
   "Remove one tag of the entry."
   (interactive)
   (let* ((entry (get-text-property (point) 'wallabag-entry) )
@@ -671,7 +667,7 @@ TAGS are seperated by comma."
                     (wallabag-request-tags)
                     (message "Remove Tag Done")))))))
 
-(defun wallabag-add-entry(url tags)
+(defun wallabag-add-entry (url tags)
   "Add a new entry by URL and TAGS."
   (interactive (list
                 (read-from-minibuffer "What URL do you want to add? ")
@@ -720,7 +716,7 @@ TAGS are seperated by comma."
                           (funcall wallabag-search-print-entry-function data)))
                       (message "Add Entry Done"))))))))
 
-(defun wallabag-insert-entry(title tags)
+(defun wallabag-insert-entry (title tags)
   "TODO: Insert a entry by TITLE and TAGS, using current buffer."
   (interactive (list
                 (read-from-minibuffer "What TITLE do you want to add? " (buffer-name))
@@ -763,7 +759,7 @@ TAGS are seperated by comma."
                         (funcall wallabag-search-print-entry-function data)))
                     (message "Add Entry Done")))))))
 
-(defun wallabag-delete-entry()
+(defun wallabag-delete-entry ()
   "Delete a entry at point."
   (interactive)
   (let* ((entry (get-text-property (point) 'wallabag-entry) )
@@ -839,7 +835,7 @@ TAGS are seperated by comma."
 (wallabag-update-entry "starred" t)
 (wallabag-update-entry "origin_url" nil)
 
-(defun wallabag-original-entry()
+(defun wallabag-original-entry ()
   "Show entry rendered with original html."
   (interactive)
   (message "Retriving original page...")
@@ -857,7 +853,7 @@ TAGS are seperated by comma."
                     (get-text-property (point) 'wallabag-entry nil)
                     (get-text-property (point-min) 'wallabag-entry nil)) nil data))))))
 
-(defun wallabag-browse-url()
+(defun wallabag-browse-url ()
   "Browser entry with original url."
   (interactive)
   (funcall wallabag-browser-function
@@ -984,7 +980,7 @@ TAGS are seperated by comma."
     (define-key map "T" #'wallabag-remove-tag)
     (define-key map "'" #'wallabag-toggle-sidebar)
     (define-key map "x" #'wallabag-update-entry-archive)
-    (define-key map "f" #'wallabag-update-entry-star)
+    (define-key map "f" #'wallabag-update-entry-starred)
     (define-key map "i" #'wallabag-update-entry-title)
     (define-key map "I" #'wallabag-update-entry-origin_url)
     map)
@@ -1190,7 +1186,7 @@ Argument EVENT mouse event."
             (propertize tag 'face 'wallabag-tag-face)
             (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))))
 
-(defun wallabag-parse-entries-as-list(filter)
+(defun wallabag-parse-entries-as-list (filter)
   "Parse all entries with FILTER, return as propertized string list."
   (cl-loop for entry in (wallabag-search-update-list filter) collect
            (propertize (wallabag-parse-entry-as-string entry) 'wallabag-entry entry)))

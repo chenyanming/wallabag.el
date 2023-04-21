@@ -92,30 +92,16 @@ It is insecure to store your sensitive credentials such as the wallabag password
 in plain text, and especially if you want to be upload it to public servers. You can use Emacs'
 built-in [[https://www.gnu.org/software/emacs/manual/html_mono/auth.html][auth-sources]] library for GPG-encrypted storage of your secrets.
 
-Create a =~/.authinfo.gpg= file with the lines:
-
+Create an encrypted =~/.authinfo.gpg= file with the lines:
 #+begin_src
 machine <wallabag-host> login <username> password <password>
 machine <wallabag-client> login <client-id> password <client-secret>
 #+end_src
 
-We can query the information via ~auth-source-search~, but it's more comfortable to define a custom
-wrapper for password lookup, taken from David Wilson's /System Crafters/ [[https://youtu.be/nZ_T7Q49B8Y][Video]] ([[https://github.com/daviwil/emacs-from-scratch/blob/master/show-notes/Emacs-Tips-Pass.org#accessing-passwords-outside-of-emacs][shownotes]]):
-
-#+begin_src emacs-lisp
-  (defun my-lookup-password (&rest keys)
-    "Get password from auth-sources by forwarding keys `auth-source-search' and calling password-function."
-    (let ((result (apply #'auth-source-search keys)))
-      (if result
-          (funcall (plist-get (car result) :secret))
-        nil)))
-#+end_src
-
 Then, we can use that when setting the wallabag password and secret variables in your config above.
-
 #+begin_src emacs-lisp
-  (setq wallabag-password (my-lookup-password :host "<wallabag-host>")
-        wallabag-secret (my-lookup-password :host "<wallabag-client>"))
+  (setq wallabag-password (auth-source-pick-first-password :host "<wallabag-host>")
+        wallabag-secret (auth-source-pick-first-password :host "<wallabag-client>"))
 #+end_src
 
 

@@ -390,7 +390,7 @@ non-nil integer PAGE retrieval starts at this page."
                     ;; call the callback
                     (if callback
                         (funcall callback args))
-                    
+
                     (run-with-idle-timer
                      4 nil
                      #'wallabag-request-and-insert-entries
@@ -1361,6 +1361,11 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
          (url (alist-get 'url entry))
          (origin-url (or (alist-get 'origin_url entry) ""))
          beg end)
+    (unless (eq major-mode 'wallabag-entry-mode)
+      (funcall wallabag-show-entry-switch buff)
+      (when switch
+        (switch-to-buffer-other-window (set-buffer (wallabag-search-buffer)))
+        (goto-char original)))
     (let ((inhibit-read-only t))
       (with-current-buffer buff
         (wallabag-emoji-init)
@@ -1402,17 +1407,12 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
                         (propertize tag 'face 'wallabag-tag-face)))
         (insert "\n")
         (insert "\n")
-        (wallabag-entry-mode)
         (setq beg (point))
         (insert content)
         (setq end (point))
+        (wallabag-entry-mode)
         (funcall wallabag-render-html-function beg end)
-        (goto-char (point-min))))
-    (unless (eq major-mode 'wallabag-entry-mode)
-      (funcall wallabag-show-entry-switch buff)
-      (when switch
-        (switch-to-buffer-other-window (set-buffer (wallabag-search-buffer)))
-        (goto-char original)))))
+        (goto-char (point-min))))))
 
 (defun wallabag-render-html (begin end)
   "Render HTML in current buffer with shr."

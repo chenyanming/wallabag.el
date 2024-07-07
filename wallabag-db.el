@@ -209,7 +209,7 @@ to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
 
     (if candidates
         candidates
-      (message "No items in wallabag database, try to update with 'u'.")
+      ;; (message "No items in wallabag database, try to update with 'u'.")
       (setq wallabag-db-newp t)
       nil)))
 

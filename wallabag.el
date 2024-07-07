@@ -1621,16 +1621,12 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
             (apply #'vector
                    (append '(:select * :from items)
                            `(,@(list :where
-                                     `(or
+                                     `(and
                                        ,@(cl-loop for word in words collect
-                                                  `(like title ,(concat "%" word "%")))
-                                       ,@(cl-loop for word in words collect
-                                                  `(like created_at ,(concat "%" word "%")))
-                                       ,@(cl-loop for word in words collect
-                                                  `(like domain_name ,(concat "%" word "%")))
-                                       ,@(cl-loop for word in words collect
-                                                  `(like tag ,(concat "%" word "%")))))
-
+                                                  `(or (like title ,(concat "%" word "%"))
+                                                       (like created_at ,(concat "%" word "%"))
+                                                       (like domain_name ,(concat "%" word "%"))
+                                                       (like tag ,(concat "%" word "%"))))))
                              :order-by (desc created_at)
                              ,@(when limit
                                  (list :limit limit) )

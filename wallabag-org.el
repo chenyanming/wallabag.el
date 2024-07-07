@@ -30,7 +30,7 @@
 ;;;###autoload
 (defun wallabag-org-link-view (id _)
   "Follow wallabag org links."
-  (let ((entry (wallabag-db-select (string-to-number id))))
+  (let ((entry (wallabag-db-select :id (string-to-number id))))
     (if entry
         (wallabag-show-entry (car entry))
       (message "No this entry."))))

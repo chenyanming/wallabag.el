@@ -8,7 +8,7 @@
 - [[#features][Features]]
 - [[#installation-and-configuration][Installation and Configuration]]
 - [[#image-caching][Image Caching]]
-- [[#retrive-new-entries-after-m-x-wallabag][Retrive new entries after =M-x wallabag=]]
+- [[#retrieve-new-entries-after-m-x-wallabag][Retrieve new entries after =M-x wallabag=]]
 - [[#keybindings][Keybindings]]
 - [[#change-logs][Change logs]]
 
@@ -16,6 +16,9 @@
 Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 #+attr_org: :width 600px
 [[file:homepage.png]]
+
+#+attr_org: :width 600px
+[[file:paw.png]]
 
 * Features
 
@@ -34,13 +37,13 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 - [x] Sidebar supported
 - [x] Select with Ivy
 - [x] sync with all clients (mobile, web, browser extention etc)
-- [x] Support [[https://github.com/chenyanming/shrface][shrface]]
-- [ ] Advanced search and filtering
+- [x] Beautify: Support [[https://github.com/chenyanming/shrface][shrface]]
+- [x] Advanced search and filtering (space separated)
+- [x] Annotation: Support [[https://github.com/chenyanming/paw][paw]]
 - [ ] Exporting.
 - [ ] Editing.
 - [ ] Batch Deletion.
 - [ ] Batch Tagging.
-- [ ] Annotation
 - [ ] Sorting.
 
 * Installation and Configuration

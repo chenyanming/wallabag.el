@@ -1104,7 +1104,7 @@ The items are printed in the order of the list."
                                                                           (- wallabag-search-title-max-width (length star)))
                                                                    :left) 'face 'wallabag-archive-face))))
                                   ("domain" (propertize domain-name 'face 'wallabag-domain-name-face))
-                                  ("tag" (format "(%s)" (propertize tag 'face 'wallabag-tag-face) ))
+                                  ("tag" (format (if (string-empty-p tag) "" "(%s)" ) (propertize tag 'face 'wallabag-tag-face) ))
                                   ("reading-time" (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))
                                   (_ "")))
                " ")))

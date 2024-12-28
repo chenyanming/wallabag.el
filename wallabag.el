@@ -1069,7 +1069,18 @@ Argument EVENT mouse event."
           (write-region (point-min) (point-max) file-name nil 'no-message))
         (funcall wallabag-browser-function (browse-url-file-url file-name))))))
 
-(defcustom wallabag-search-print-items '("title" "reading-time" "domain" "tag" "\n" "content" "\n " )
+
+(defcustom wallabag-search-view-mode 'list
+  "The view mode of the search buffer.
+Under table mode, the tile width is controlled by
+ `wallabag-search-title-min-width',
+ `wallabag-search-title-max-width',
+ `wallabag-search-trailing-width'.
+If list mode, the title is full width."
+  :type '(choice (const :tag "Table" table)
+                 (const :tag "List" list)))
+
+(defcustom wallabag-search-print-items '("title" "reading-time" "date" "\n" "domain" "tag" "\n" "content" "\n ")
   "The items to be printed in the search buffer.
 The items are printed in the order of the list.
 title, domain, tag, reading-time, date, content are supported.
@@ -1081,6 +1092,8 @@ for other characters, they are printed as they are."
   "Parse the wallabag ENTRY and return as string."
   (let* ((title (or (alist-get 'title entry) "NO TITLE"))
          (created-at (alist-get 'created_at entry))
+         (created-at-days (string-to-number (format-seconds "%d" (+ (float-time (time-subtract (current-time) (encode-time (parse-time-string created-at))))
+                                                                    86400)))) ;; shift 1 day
          (reading-time (alist-get 'reading_time entry))
          (is-archived (alist-get 'is_archived entry))
          (is-starred (alist-get 'is_starred entry))
@@ -1097,21 +1110,34 @@ for other characters, they are printed as they are."
     (mapconcat #'identity
                (cl-loop for item in wallabag-search-print-items
                         collect (pcase item
-                                  ("date" (propertize (substring created-at 0 10) 'face 'wallabag-date-face))
+                                  ("date" (propertize
+                                           (cond ((< created-at-days 7)
+                                                  (format "%sd" created-at-days))
+                                                 ((< created-at-days 30)
+                                                  (format "%sw" (/ created-at-days 7)))
+                                                 ((< created-at-days 365)
+                                                  (format "%sm" (/ created-at-days 30)))
+                                                 (t
+                                                  (format "%sy" (/ created-at-days 365))))
+                                           'face 'wallabag-date-face))
                                   ("title" (format "%s%s" star
                                                     (if (= is-archived 0)
-                                                        (propertize (wallabag-format-column
-                                                                     title (wallabag-clamp
-                                                                            (- wallabag-search-title-min-width (length star))
-                                                                            (- title-width (length star))
-                                                                            (- wallabag-search-title-max-width (length star)))
-                                                                     :left) 'face 'wallabag-title-face)
-                                                      (propertize (wallabag-format-column
-                                                                   title (wallabag-clamp
-                                                                          (- wallabag-search-title-min-width (length star))
-                                                                          (- title-width (length star))
-                                                                          (- wallabag-search-title-max-width (length star)))
-                                                                   :left) 'face 'wallabag-archive-face))))
+                                                        (if (equal wallabag-search-view-mode 'table)
+                                                            (propertize (wallabag-format-column
+                                                                         title (wallabag-clamp
+                                                                                (- wallabag-search-title-min-width (length star))
+                                                                                (- title-width (length star))
+                                                                                (- wallabag-search-title-max-width (length star)))
+                                                                         :left) 'face 'wallabag-title-face)
+                                                          (propertize title 'face 'wallabag-title-face))
+                                                      (if (equal wallabag-search-view-mode 'table)
+                                                          (propertize (wallabag-format-column
+                                                                       title (wallabag-clamp
+                                                                              (- wallabag-search-title-min-width (length star))
+                                                                              (- title-width (length star))
+                                                                              (- wallabag-search-title-max-width (length star)))
+                                                                       :left) 'face 'wallabag-archive-face)
+                                                        (propertize title 'face 'wallabag-title-face)))))
                                   ("content" (propertize (if (string-empty-p content) ""
                                                            (s-word-wrap (window-width (selected-window))
                                                                         (s-truncate
@@ -1605,7 +1631,7 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
   "Get wallabag entries by PAGE."
   (wallabag-db-select :sql (wallabag-search-parse-filter wallabag-search-filter :limit wallabag-search-page-max-rows :page page)))
 
-(defcustom wallabag-search-page-max-rows 10
+(defcustom wallabag-search-page-max-rows 8
   "The maximum number of entries to display in a single page."
   :group 'wallabag
   :type 'integer)

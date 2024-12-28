@@ -852,11 +852,12 @@ TAGS are seperated by comma."
 
 (defun wallabag-search-header ()
   "TODO: Return the string to be used as the wallabag header."
-  (format "%s%s   %s"
-          (propertize "Wallabag: " 'face font-lock-preprocessor-face)
+  (format "%s%s"
           (if (string-equal system-type "android")
               ""
-           (propertize (format "%s" wallabag-host) 'face font-lock-type-face) )
+            (format "%s%s   "
+                    (propertize "Wallabag: " 'face font-lock-preprocessor-face)
+                    (propertize (format "%s" wallabag-host) 'face font-lock-type-face)))
           (concat
            (if wallabag-retrieving-p
                (propertize wallabag-retrieving-p 'face font-lock-warning-face)

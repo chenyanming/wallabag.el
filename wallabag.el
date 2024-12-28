@@ -38,6 +38,7 @@
 (require 'request)
 (require 'shr)
 (require 'browse-url)
+(require 's)
 (ignore-errors
   (require 'evil)
   (require 'ivy))
@@ -100,12 +101,17 @@
   :group 'wallabag
   :type 'integer)
 
-(defcustom wallabag-search-title-max-width 70
+(defcustom wallabag-search-title-max-width (window-width (selected-window))
   "Maximum column width for titles in the wallabag-search buffer."
   :group 'wallabag
   :type 'integer)
 
-(defcustom wallabag-search-trailing-width 30
+(defcustom wallabag-search-content-max-width 200
+  "Maximum width for content in the wallabag-search buffer."
+  :group 'wallabag
+  :type 'integer)
+
+(defcustom wallabag-search-trailing-width 50
   "Space reserved for displaying the feed and tag information."
   :group 'wallabag
   :type 'integer)
@@ -1063,9 +1069,11 @@ Argument EVENT mouse event."
           (write-region (point-min) (point-max) file-name nil 'no-message))
         (funcall wallabag-browser-function (browse-url-file-url file-name))))))
 
-(defcustom wallabag-search-print-items '("date" "title" "domain" "tag" "reading-time")
+(defcustom wallabag-search-print-items '("title" "reading-time" "domain" "tag" "\n" "content" "\n " )
   "The items to be printed in the search buffer.
-The items are printed in the order of the list."
+The items are printed in the order of the list.
+title, domain, tag, reading-time, date, content are supported.
+for other characters, they are printed as they are."
   :type '(repeat string)
   :group 'wallabag)
 
@@ -1078,13 +1086,14 @@ The items are printed in the order of the list."
          (is-starred (alist-get 'is_starred entry))
          (tag (alist-get 'tag entry))
          (domain-name (or (alist-get 'domain_name entry) ""))
-         (title-width (- (window-width (get-buffer-window "*wallabag-search*") ) 10 wallabag-search-trailing-width))
+         (title-width (- (window-width (selected-window) ) wallabag-search-trailing-width))
          (star (if (= is-starred 0)
                    ""
                  (format "%s " (propertize wallabag-starred-icon
                                            'face 'wallabag-starred-face
                                            'mouse-face 'wallabag-mouse-face
-                                           'help-echo "Filter the favorite items")))))
+                                           'help-echo "Filter the favorite items"))))
+         (content (alist-get 'content entry)))
     (mapconcat #'identity
                (cl-loop for item in wallabag-search-print-items
                         collect (pcase item
@@ -1103,10 +1112,16 @@ The items are printed in the order of the list."
                                                                           (- title-width (length star))
                                                                           (- wallabag-search-title-max-width (length star)))
                                                                    :left) 'face 'wallabag-archive-face))))
+                                  ("content" (propertize (if (string-empty-p content) ""
+                                                           (s-word-wrap (window-width (selected-window))
+                                                                        (s-truncate
+                                                                         wallabag-search-content-max-width
+                                                                         (replace-regexp-in-string "[[:space:]\n\r]+" " " (wallabag-render-content content))) ))
+                                                         'face 'wallabag-content-face))
                                   ("domain" (propertize domain-name 'face 'wallabag-domain-name-face))
                                   ("tag" (format (if (string-empty-p tag) "" "(%s)" ) (propertize tag 'face 'wallabag-tag-face) ))
                                   ("reading-time" (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))
-                                  (_ "")))
+                                  (_ item)))
                " ")))
 
 (defun wallabag-parse-entries-as-list (filter)
@@ -1341,6 +1356,15 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
   (run-hooks 'wallabag-pre-html-render-hook)
   (shr-render-region begin end)
   (run-hooks 'wallabag-post-html-render-hook))
+
+(defun wallabag-render-content (content)
+  "Render content with shr."
+  (with-temp-buffer
+    (insert content)
+    (let ((shr-use-fonts nil))
+      (cl-letf (((symbol-function 'shr-tag-img) nil)) ;; do not load online images
+        (shr-render-region (point-min) (point-max))))
+    (buffer-string)))
 
 (defun wallabag-entry-quit ()
   "Quit the *wallabag-entry*."
@@ -1581,7 +1605,7 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
   "Get wallabag entries by PAGE."
   (wallabag-db-select :sql (wallabag-search-parse-filter wallabag-search-filter :limit wallabag-search-page-max-rows :page page)))
 
-(defcustom wallabag-search-page-max-rows 43
+(defcustom wallabag-search-page-max-rows 10
   "The maximum number of entries to display in a single page."
   :group 'wallabag
   :type 'integer)

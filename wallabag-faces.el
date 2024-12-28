@@ -17,7 +17,18 @@
   "Face used for id."
   :group 'wallabag-faces)
 
-(defface wallabag-title-face '((t :inherit default))
+(defface wallabag-title-face
+  '((((class color) (background light))
+     (:weight bold
+      :height 1.1))
+    (((class color) (background dark))
+     (:weight bold
+      :height 1.1))
+    (t (:inherit default)))
+  "Face used for title."
+  :group 'wallabag-faces)
+
+(defface wallabag-content-face '((t :inherit default))
   "Face used for title on compact view."
   :group 'wallabag-faces)
 

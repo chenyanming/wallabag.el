@@ -1063,6 +1063,12 @@ Argument EVENT mouse event."
           (write-region (point-min) (point-max) file-name nil 'no-message))
         (funcall wallabag-browser-function (browse-url-file-url file-name))))))
 
+(defcustom wallabag-search-print-items '("date" "title" "domain" "tag" "reading-time")
+  "The items to be printed in the search buffer.
+The items are printed in the order of the list."
+  :type '(repeat string)
+  :group 'wallabag)
+
 (defun wallabag-parse-entry-as-string (entry)
   "Parse the wallabag ENTRY and return as string."
   (let* ((title (or (alist-get 'title entry) "NO TITLE"))
@@ -1079,25 +1085,29 @@ Argument EVENT mouse event."
                                            'face 'wallabag-starred-face
                                            'mouse-face 'wallabag-mouse-face
                                            'help-echo "Filter the favorite items")))))
-    (format "%s %s%s %s (%s) %s"
-            (propertize (substring created-at 0 10) 'face 'wallabag-date-face)
-            star
-            (if (= is-archived 0)
-                (propertize (wallabag-format-column
-                             title (wallabag-clamp
-                                    (- wallabag-search-title-min-width (length star))
-                                    (- title-width (length star))
-                                    (- wallabag-search-title-max-width (length star)))
-                             :left) 'face 'wallabag-title-face)
-              (propertize (wallabag-format-column
-                           title (wallabag-clamp
-                                  (- wallabag-search-title-min-width (length star))
-                                  (- title-width (length star))
-                                  (- wallabag-search-title-max-width (length star)))
-                           :left) 'face 'wallabag-archive-face))
-            (propertize domain-name 'face 'wallabag-domain-name-face)
-            (propertize tag 'face 'wallabag-tag-face)
-            (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))))
+    (mapconcat #'identity
+               (cl-loop for item in wallabag-search-print-items
+                        collect (pcase item
+                                  ("date" (propertize (substring created-at 0 10) 'face 'wallabag-date-face))
+                                  ("title" (format "%s%s" star
+                                                    (if (= is-archived 0)
+                                                        (propertize (wallabag-format-column
+                                                                     title (wallabag-clamp
+                                                                            (- wallabag-search-title-min-width (length star))
+                                                                            (- title-width (length star))
+                                                                            (- wallabag-search-title-max-width (length star)))
+                                                                     :left) 'face 'wallabag-title-face)
+                                                      (propertize (wallabag-format-column
+                                                                   title (wallabag-clamp
+                                                                          (- wallabag-search-title-min-width (length star))
+                                                                          (- title-width (length star))
+                                                                          (- wallabag-search-title-max-width (length star)))
+                                                                   :left) 'face 'wallabag-archive-face))))
+                                  ("domain" (propertize domain-name 'face 'wallabag-domain-name-face))
+                                  ("tag" (format "(%s)" (propertize tag 'face 'wallabag-tag-face) ))
+                                  ("reading-time" (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))
+                                  (_ "")))
+               " ")))
 
 (defun wallabag-parse-entries-as-list (filter)
   "Parse all entries with FILTER, return as propertized string list."

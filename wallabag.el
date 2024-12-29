@@ -1672,9 +1672,8 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
                     (insert " " (buttonize button-string #'wallabag-search-more-data (1+ i)) " ") ))
               (insert "End of entries.\n"))
             (goto-char (point-min)))
-        ;; if error happened, no entries found in db, close it and reopen
         (emacsql-close (wallabag-db))
-        (wallabag)))))
+        (error "Database Error, please reopen with `M-x wallabag'")))))
 
 (defun wallabag-search-get-filtered-entries (&optional page)
   "Get wallabag entries by PAGE."

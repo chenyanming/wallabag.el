@@ -530,7 +530,7 @@ Please notice: this function should be called only when no new entires in the se
                     (find-file file)))))))
 
 
-(defun wallabag-request-tags ()
+(defun wallabag-request-tags (&optional callback)
   "Request all tags."
   (interactive)
   (let* ((host wallabag-host)
@@ -553,6 +553,7 @@ Please notice: this function should be called only when no new entires in the se
                     (setq wallabag-all-tags tag-list)
                     (if (and wallabag-show-sidebar wallabag-all-tags)
                         (wallabag-sidebar-create-window))
+                    (if callback (funcall callback))
                     ;; (message "Retrieved all tags Done")
                     ))))))
 
@@ -823,9 +824,12 @@ TAGS are seperated by comma."
 (defun wallabag-get-tag-name ()
   "Get the tag name in a list."
   (interactive)
-  (completing-read
-   "Selete the tag you want to add: "
-   (append '("All" "Unread" "Starred" "Archive" "All") (mapcar 'cdr wallabag-all-tags))))
+  (if wallabag-all-tags
+      (completing-read
+       "Selete the tag you want to add: "
+       (append '("All" "Unread" "Starred" "Archive" "All") (mapcar 'cdr wallabag-all-tags)))
+      (wallabag-request-tags 'wallabag-get-tag-name)
+      "")) ;; return empty tag name to avoid error
 
 
 (defun wallabag-parse-json (json)

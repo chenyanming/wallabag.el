@@ -167,7 +167,8 @@ to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
 (defun wallabag-db-select (&rest properties)
   (let ((candidates)
         (sql (plist-get properties :sql))
-        (id (plist-get properties :id)))
+        (id (plist-get properties :id))
+        (title (plist-get properties :title)))
     (setq candidates (mapcar (lambda(x)
                                (cl-pairlis
                                 '(tag
@@ -205,7 +206,9 @@ to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
                                 x))
                              (if id
                                  (wallabag-db-sql `[:select * :from items :where (= id ,id)])
-                               (wallabag-db-sql (or sql [:select * :from items] )))) )
+                               (if title
+                                   (wallabag-db-sql `[:select * :from items :where (= title ,title)])
+                                 (wallabag-db-sql (or sql [:select * :from items] ))))) )
 
     (if candidates
         candidates

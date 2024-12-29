@@ -1626,7 +1626,10 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
             (funcall wallabag-search-print-entry-function entry)))
       (if (< len wallabag-search-entries-length)
           (dotimes (i wallabag-search-pages)
-            (insert " " (buttonize (format "%d" (1+ i)) #'wallabag-search-more-data (1+ i)) " "))
+            (let ((button-string (format "%d" (1+ i))))
+              (if (equal (string-to-number button-string) wallabag-search-current-page)
+                  (add-face-text-property 0 (length button-string) 'wallabag-current-page-button-face t button-string))
+              (insert " " (buttonize button-string #'wallabag-search-more-data (1+ i)) " ") ))
         (insert "End of entries.\n"))
       (goto-char (point-min)))))
 

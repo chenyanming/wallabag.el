@@ -825,7 +825,7 @@ TAGS are seperated by comma."
   (interactive)
   (completing-read
    "Selete the tag you want to add: "
-   (mapcar 'cdr wallabag-all-tags)))
+   (append '("All" "Unread" "Starred" "Archive" "All") (mapcar 'cdr wallabag-all-tags))))
 
 
 (defun wallabag-parse-json (json)
@@ -905,7 +905,8 @@ TAGS are seperated by comma."
     (define-key map "w" #'wallabag-org-link-copy)
     (define-key map "t" #'wallabag-add-tags)
     (define-key map "T" #'wallabag-remove-tag)
-    (define-key map "'" #'wallabag-toggle-sidebar)
+    (define-key map "'" #'wallabag-goto-sidebar)
+    (define-key map "b" #'wallabag-toggle-sidebar)
     (define-key map "x" #'wallabag-update-entry-archive)
     (define-key map "f" #'wallabag-update-entry-starred)
     (define-key map "i" #'wallabag-update-entry-title)
@@ -937,7 +938,9 @@ TAGS are seperated by comma."
       (kbd "y") 'wallabag-org-link-copy
       (kbd "t") 'wallabag-add-tags
       (kbd "T") 'wallabag-remove-tag
-      (kbd "'") 'wallabag-toggle-sidebar
+      (kbd "'") 'wallabag-list-tags
+      (kbd "g t") 'wallabag-toggle-sidebar
+      (kbd "g s") 'wallabag-goto-sidebar
       (kbd "x") 'wallabag-update-entry-archive
       (kbd "f") 'wallabag-update-entry-starred
       (kbd "i") 'wallabag-update-entry-title
@@ -1527,6 +1530,16 @@ Defaults to current directory."
     (when wallabag-sidebar-select-window
       (select-window (get-buffer-window wallabag-sidebar-buffer)))))
 
+
+;;;###autoload
+(defun wallabag-goto-sidebar ()
+  "Create or goto sidebar window."
+  (interactive)
+  (if (window-live-p (get-buffer-window wallabag-sidebar-buffer))
+      (select-window (get-buffer-window wallabag-sidebar-buffer))
+    (wallabag-sidebar-create-window)
+    (select-window (get-buffer-window wallabag-sidebar-buffer))))
+
 (defun wallabag-sidebar-refresh ()
    (with-current-buffer wallabag-sidebar-buffer
     (with-silent-modifications
@@ -1567,6 +1580,12 @@ Defaults to current directory."
   (forward-line -1)
   (setq wallabag-group-filteringp t)
   (wallabag-search-update-buffer-with-keyword (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+
+(defun wallabag-list-tags ()
+  "List all tags in the sidebar."
+  (interactive)
+  (setq wallabag-group-filteringp t)
+  (wallabag-search-update-buffer-with-keyword (wallabag-get-tag-name)))
 
 ;;; live filtering
 
@@ -1696,25 +1715,8 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
         (limit (plist-get properties :limit))
         (count (plist-get properties :count))
         (page (plist-get properties :page)))
-    (if id
-        `[:select * :from items
-          :where (= id ,id)]
-        (if (or wallabag-live-filteringp (not (string-empty-p wallabag-search-filter) ))
-            (apply #'vector
-                   (append '(:select * :from items)
-                           `(,@(list :where
-                                     `(and
-                                       ,@(cl-loop for word in words collect
-                                                  `(or (like title ,(concat "%" word "%"))
-                                                       (like created_at ,(concat "%" word "%"))
-                                                       (like domain_name ,(concat "%" word "%"))
-                                                       (like tag ,(concat "%" word "%"))))))
-                             :order-by (desc created_at)
-                             ,@(when limit
-                                 (list :limit limit) )
-                             ,@(when page
-                                 (list :offset (* (1- page) wallabag-search-page-max-rows))))))
-          (apply #'vector
+    (cond
+     (wallabag-group-filteringp (apply #'vector
                  (append '(:select * :from items)
                          `(,@(list :where
                                    `(or
@@ -1733,7 +1735,44 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
                            ,@(when limit
                                (list :limit limit) )
                            ,@(when page
-                               (list :offset (* (1- page) wallabag-search-page-max-rows))))))) )))
+                               (list :offset (* (1- page) wallabag-search-page-max-rows)))))))
+     (id `[:select * :from items
+           :where (= id ,id)])
+     ((or wallabag-live-filteringp (not (string-empty-p wallabag-search-filter) ))
+      (apply #'vector
+             (append '(:select * :from items)
+                     `(,@(list :where
+                               `(and
+                                 ,@(cl-loop for word in words collect
+                                            `(or (like title ,(concat "%" word "%"))
+                                                 (like created_at ,(concat "%" word "%"))
+                                                 (like domain_name ,(concat "%" word "%"))
+                                                 (like tag ,(concat "%" word "%"))))))
+                       :order-by (desc created_at)
+                       ,@(when limit
+                           (list :limit limit) )
+                       ,@(when page
+                           (list :offset (* (1- page) wallabag-search-page-max-rows)))))))
+     (t (apply #'vector
+                 (append '(:select * :from items)
+                         `(,@(list :where
+                                   `(or
+                                     ,@(cl-loop for word in words collect
+                                                (cond
+                                                 ((string= "Unread" word) `(= is_archived 0))
+                                                 ((string= "Starred" word) `(= is_starred 1))
+                                                 ((string= "Archive" word) `(= is_archived 1))
+                                                 ((string= "All" word) `(!= id 0))
+                                                 ((string= "Tags" word) `(!= id 0))
+                                                 ((string= "" word) `(!= id 0))
+                                                 (t `(= tag ,word))) ) ))
+
+
+                           :order-by (desc created_at)
+                           ,@(when limit
+                               (list :limit limit) )
+                           ,@(when page
+                               (list :offset (* (1- page) wallabag-search-page-max-rows))))))))))
 
 (defun wallabag-search-clear-filter ()
   "Clear the fitler keyword."

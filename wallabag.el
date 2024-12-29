@@ -1652,24 +1652,29 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
            (id 0)
            (entries (wallabag-search-get-filtered-entries page))
            (len (length entries)))
-      (setq wallabag-search-entries-length (or (cdaar (wallabag-db-select
+      (setq wallabag-search-entries-length (cdaar (wallabag-db-select
                                                    :sql `[:select (funcall count id)
                                                           :from
-                                                          ,(wallabag-search-parse-filter wallabag-search-filter)])) 0 ))
-      (setq wallabag-search-pages (ceiling wallabag-search-entries-length wallabag-search-page-max-rows))
-      (erase-buffer)
-      (dolist (entry entries)
-        (setq id (1+ id))
-        (if (<= id wallabag-search-page-max-rows)
-            (funcall wallabag-search-print-entry-function entry)))
-      (if (< len wallabag-search-entries-length)
-          (dotimes (i wallabag-search-pages)
-            (let ((button-string (format "%d" (1+ i))))
-              (if (equal (string-to-number button-string) wallabag-search-current-page)
-                  (add-face-text-property 0 (length button-string) 'wallabag-current-page-button-face t button-string))
-              (insert " " (buttonize button-string #'wallabag-search-more-data (1+ i)) " ") ))
-        (insert "End of entries.\n"))
-      (goto-char (point-min)))))
+                                                          ,(wallabag-search-parse-filter wallabag-search-filter)])))
+      (if wallabag-search-entries-length
+          (progn
+            (setq wallabag-search-pages (ceiling wallabag-search-entries-length wallabag-search-page-max-rows))
+            (erase-buffer)
+            (dolist (entry entries)
+              (setq id (1+ id))
+              (if (<= id wallabag-search-page-max-rows)
+                  (funcall wallabag-search-print-entry-function entry)))
+            (if (< len wallabag-search-entries-length)
+                (dotimes (i wallabag-search-pages)
+                  (let ((button-string (format "%d" (1+ i))))
+                    (if (equal (string-to-number button-string) wallabag-search-current-page)
+                        (add-face-text-property 0 (length button-string) 'wallabag-current-page-button-face t button-string))
+                    (insert " " (buttonize button-string #'wallabag-search-more-data (1+ i)) " ") ))
+              (insert "End of entries.\n"))
+            (goto-char (point-min)))
+        ;; if error happened, no entries found in db, close it and reopen
+        (emacsql-close (wallabag-db))
+        (wallabag)))))
 
 (defun wallabag-search-get-filtered-entries (&optional page)
   "Get wallabag entries by PAGE."

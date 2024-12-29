@@ -168,7 +168,9 @@ to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
   (let ((candidates)
         (sql (plist-get properties :sql))
         (id (plist-get properties :id))
-        (title (plist-get properties :title)))
+        (title (plist-get properties :title))
+        (next-entry (plist-get properties :next-entry))
+        (previous-entry (plist-get properties :previous-entry)))
     (setq candidates (mapcar (lambda(x)
                                (cl-pairlis
                                 '(tag
@@ -204,12 +206,12 @@ to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
                                   headers
                                   _links)
                                 x))
-                             (if id
-                                 (wallabag-db-sql `[:select * :from items :where (= id ,id)])
-                               (if title
-                                   (wallabag-db-sql `[:select * :from items :where (= title ,title)])
-                                 (wallabag-db-sql (or sql [:select * :from items] ))))) )
-
+                             (cond
+                              (id (wallabag-db-sql `[:select * :from items :where (= id ,id)]))
+                              (title (wallabag-db-sql `[:select * :from items :where (= title ,title)]))
+                              (previous-entry (wallabag-db-sql `[:select * :from items :where (> id ,previous-entry) :limit 1]) )
+                              (next-entry (wallabag-db-sql `[:select * :from items :where (< id ,next-entry) :order-by (desc id) :limit 1]) )
+                              (t (wallabag-db-sql (or sql [:select * :from items]))))))
     (if candidates
         candidates
       ;; (message "No items in wallabag database, try to update with 'u'.")

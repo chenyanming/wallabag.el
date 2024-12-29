@@ -1232,22 +1232,33 @@ for other characters, they are printed as they are."
 (defun wallabag-next-entry ()
   "Move to next entry."
   (interactive)
-  (let ((ori "") (new ""))
-    (while (and (equal new ori) new ori)
-      (setq ori (alist-get 'id (get-text-property (point) 'wallabag-entry nil)))
-      (forward-line 1)
-      (setq new (alist-get 'id (get-text-property (point) 'wallabag-entry nil))))))
+  (if (eq major-mode 'wallabag-search-mode)
+      (let ((ori "") (new ""))
+        (while (and (equal new ori) new ori)
+          (setq ori (alist-get 'id (get-text-property (point) 'wallabag-entry nil)))
+          (forward-line 1)
+          (setq new (alist-get 'id (get-text-property (point) 'wallabag-entry nil)))))
+    (let* ((current-id (alist-get 'id (get-text-property (point-min) 'wallabag-entry nil)))
+           (next-entry (car (wallabag-db-select :next-entry current-id) )))
+      (if next-entry (wallabag-show-entry next-entry)
+        (message "This is the last entry")))))
 
 (defun wallabag-previous-entry ()
   "Move to previous entry."
   (interactive)
-  (let ((ori "") (new ""))
-    (while (and (equal new ori) new ori (> (line-number-at-pos) 1))
-      (forward-line -1)
-      (save-excursion
-        (setq ori (alist-get 'id (get-text-property (point) 'wallabag-entry nil)))
-        (forward-line -1)
-        (setq new (alist-get 'id (get-text-property (point) 'wallabag-entry nil)))))))
+  (if (eq major-mode 'wallabag-search-mode)
+      (let ((ori "") (new ""))
+        (while (and (equal new ori) new ori (> (line-number-at-pos) 1))
+          (forward-line -1)
+          (save-excursion
+            (setq ori (alist-get 'id (get-text-property (point) 'wallabag-entry nil)))
+            (forward-line -1)
+            (setq new (alist-get 'id (get-text-property (point) 'wallabag-entry nil))))))
+    (let* ((current-id (alist-get 'id (get-text-property (point-min) 'wallabag-entry nil)))
+           (previous-entry (car (wallabag-db-select :previous-entry current-id) )))
+      (if previous-entry (wallabag-show-entry previous-entry)
+        (message "This is the first entry")))
+    ))
 
 ;; refresh
 
@@ -1285,6 +1296,8 @@ for other characters, they are printed as they are."
 
 (defvar wallabag-entry-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "[" #'wallabag-previous-entry)
+    (define-key map "]" #'wallabag-next-entry)
     (define-key map "&" #'wallabag-browse-with-external-browser)
     (define-key map "q" #'wallabag-entry-quit)
     (define-key map "v" #'wallabag-view)
@@ -1295,6 +1308,8 @@ for other characters, they are printed as they are."
 
 (if (featurep 'evil)
     (evil-define-key '(normal emacs) wallabag-entry-mode-map
+      (kbd "[") 'wallabag-previous-entry
+      (kbd "]") 'wallabag-next-entry
       (kbd "&") 'wallabag-browse-with-external-browser
       (kbd "g r") 'wallabag-view
       (kbd "o") 'wallabag-original-entry

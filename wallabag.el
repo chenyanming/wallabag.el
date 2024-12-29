@@ -730,8 +730,7 @@ TAGS are seperated by comma."
          (title (alist-get 'title entry))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token)))
-         (beg (line-beginning-position))
-         (end (1+ (line-end-position))))
+         (ori))
     (if (yes-or-no-p (format "Do you really want to Delete \"%s\"?" title))
         (request (format "%s/api/entries/%s.json" host id)
           :parser 'json-read
@@ -746,8 +745,9 @@ TAGS are seperated by comma."
                       (let ((inhibit-read-only t))
                         (wallabag-db-delete id)
                         (with-current-buffer (wallabag-search-buffer)
-                          (save-excursion
-                            (delete-region beg end)))
+                          (setq ori (point))
+                          (wallabag-search-update-buffer wallabag-search-current-page)
+                          (goto-char ori))
                         (message "Deletion Done"))))))))
 
 
@@ -1629,10 +1629,10 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
            (id 0)
            (entries (wallabag-search-get-filtered-entries page))
            (len (length entries)))
-      (setq wallabag-search-entries-length (cdaar (wallabag-db-select
+      (setq wallabag-search-entries-length (or (cdaar (wallabag-db-select
                                                    :sql `[:select (funcall count id)
                                                           :from
-                                                          ,(wallabag-search-parse-filter wallabag-search-filter)])))
+                                                          ,(wallabag-search-parse-filter wallabag-search-filter)])) 0 ))
       (setq wallabag-search-pages (ceiling wallabag-search-entries-length wallabag-search-page-max-rows))
       (erase-buffer)
       (dolist (entry entries)

@@ -1207,7 +1207,7 @@ for other characters, they are printed as they are."
       (insert "\n"))))
 
 
-(defun wallabag-search-quit ()
+(defun wallabag-quit ()
   "Quit *wallabag-entry* or *wallabag-search*."
   (interactive)
   (when (eq major-mode 'wallabag-search-mode)
@@ -1222,6 +1222,14 @@ for other characters, they are printed as they are."
            (quit-window)
            (kill-buffer "*wallabag-search*")
            (wallabag-sidebar-quit)))))
+
+(defun wallabag-search-quit ()
+  "Quit *wallabag-search*."
+  (interactive)
+  (when (eq major-mode 'wallabag-search-mode)
+    (quit-window)
+    (kill-buffer "*wallabag-search*")
+    (wallabag-sidebar-quit)))
 
 ;; mark/unmark
 

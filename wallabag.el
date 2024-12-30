@@ -838,19 +838,46 @@ TAGS are seperated by comma."
 (defun wallabag-get-total (json)
   (cdr (assoc 'total json)))
 
+(defvar wallabag-find-history nil)
+
 ;;;###autoload
 (defun wallabag-find ()
-  "Find the entry from list using ivy."
+  "Find the entry from list using ivy or consult."
   (interactive)
-  (if (featurep 'ivy)
-      (ivy-read "Wallabag: " #'wallabag-parse-entries-as-list
-                :dynamic-collection t
-                :sort nil
-                :action (lambda (cand)
-                          (with-ivy-window
-                            (wallabag-show-entry (get-text-property 0 'wallabag-entry cand))))
-                :caller 'wallagab-find)
-    (message "`wallabag-find' only supportes ivy.")))
+  (cond
+   ((featurep 'ivy)
+    (ivy-read "Wallabag: " #'wallabag-parse-entries-as-list
+              :dynamic-collection t
+              :sort nil
+              :action (lambda (cand)
+                        (with-ivy-window
+                         (wallabag-show-entry (get-text-property 0 'wallabag-entry cand))))
+              :caller 'wallagab-find))
+   ((fboundp 'consult--read)
+    (consult--read (nreverse (mapcar (lambda(x)
+                                       (list (format "[%s] ⇰ %s (%s) %s"
+                                                     (propertize (nth 0 x) 'face 'wallabag-title-face)
+                                                     (propertize (nth 1 x) 'face 'wallabag-domain-name-face)
+                                                     (propertize (mapconcat
+                                                      #'identity
+                                                      (mapcar
+                                                       ;; get label of each element
+                                                       (lambda(x)
+                                                         (alist-get 'label x))
+                                                       ;; get tags vector
+                                                       (nth 2 x))
+                                                      ;; concat with ,
+                                                      ",") 'face 'wallabag-tag-face)
+                                                     (propertize (s-left 10 (nth 3 x) ) 'face 'wallabag-date-face))
+                                             (nth 4 x)))
+                                     (wallabag-db-sql '[:select [title domain_name tags created_at id] :from items])))
+                   :sort nil
+                   :history 'wallabag-find-history
+                   :prompt "Wallabag: "
+                   :lookup (lambda(cand candidates input-string _)
+                             (when (string-match "⇰\s\\(.+\\)$" cand)
+                               (wallabag-show-entry (car (wallabag-db-select :id (nth 1 (assoc cand candidates)))))))))
+   (t (message "`wallabag-find' only supportes ivy and consult."))))
 
 ;;; header
 

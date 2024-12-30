@@ -42,6 +42,7 @@
 (ignore-errors
   (require 'evil)
   (require 'ivy))
+(require 'consult nil t)
 
 (declare-function evil-define-key "evil")
 (declare-function ivy-read "ivy")

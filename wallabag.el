@@ -855,7 +855,7 @@ TAGS are seperated by comma."
               :caller 'wallagab-find))
    ((fboundp 'consult--read)
     (consult--read (nreverse (mapcar (lambda(x)
-                                       (list (format "[%s] ⇰ %s (%s) %s"
+                                       (list (format "[%s] ⇰ %s (%s) %s %s"
                                                      (propertize (nth 0 x) 'face 'wallabag-title-face)
                                                      (propertize (nth 1 x) 'face 'wallabag-domain-name-face)
                                                      (propertize (mapconcat
@@ -868,9 +868,10 @@ TAGS are seperated by comma."
                                                        (nth 2 x))
                                                       ;; concat with ,
                                                       ",") 'face 'wallabag-tag-face)
-                                                     (propertize (s-left 10 (nth 3 x) ) 'face 'wallabag-date-face))
-                                             (nth 4 x)))
-                                     (wallabag-db-sql '[:select [title domain_name tags created_at id] :from items])))
+                                                     (propertize (concat (number-to-string (nth 3 x)) " min") 'face 'wallabag-reading-time-face)
+                                                     (propertize (s-left 10 (nth 4 x)) 'face 'wallabag-date-face))
+                                             (nth 5 x)))
+                                     (wallabag-db-sql '[:select [title domain_name tags reading_time created_at id] :from items])))
                    :sort nil
                    :history 'wallabag-find-history
                    :prompt "Wallabag: "
@@ -1117,7 +1118,7 @@ If list mode, the title is full width."
   :type '(choice (const :tag "Table" table)
                  (const :tag "List" list)))
 
-(defcustom wallabag-search-print-items '("title" "domain" "reading-time" "tag" "date" "\n" "content" "\n ")
+(defcustom wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date" "\n" "content" "\n ")
   "The items to be printed in the search buffer.
 The items are printed in the order of the list.
 title, domain, tag, reading-time, date, content are supported.

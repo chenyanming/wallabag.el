@@ -1090,7 +1090,7 @@ If list mode, the title is full width."
   :type '(choice (const :tag "Table" table)
                  (const :tag "List" list)))
 
-(defcustom wallabag-search-print-items '("title" "reading-time" "date" "\n" "domain" "tag" "\n" "content" "\n ")
+(defcustom wallabag-search-print-items '("title" "domain" "reading-time" "tag" "date" "\n" "content" "\n ")
   "The items to be printed in the search buffer.
 The items are printed in the order of the list.
 title, domain, tag, reading-time, date, content are supported.

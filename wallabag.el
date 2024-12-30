@@ -1006,7 +1006,7 @@ TAGS are seperated by comma."
   (switch-to-buffer (wallabag-search-buffer))
   (goto-char (point-min))
   (let ((wallabag-live-filteringp t))
-    (wallabag-search-update-buffer) )
+    (wallabag-search-update-buffer wallabag-search-current-page) )
   (unless (eq major-mode 'wallabag-search-mode)
     (wallabag-search-mode))
   (if (and wallabag-show-sidebar wallabag-all-tags)

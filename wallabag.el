@@ -1119,7 +1119,7 @@ If list mode, the title is full width."
   :type '(choice (const :tag "Table" table)
                  (const :tag "List" list)))
 
-(defcustom wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date" "\n" "content" "\n ")
+(defcustom wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date" "\n" "preview_picture" "content" "\n ")
   "The items to be printed in the search buffer.
 The items are printed in the order of the list.
 title, domain, tag, reading-time, date, content are supported.
@@ -1183,11 +1183,90 @@ for other characters, they are printed as they are."
                                                                          wallabag-search-content-max-width
                                                                          (replace-regexp-in-string "[[:space:]\n\r]+" " " (wallabag-render-content content))) ))
                                                          'face 'wallabag-content-face))
+                                  ("preview_picture" (if (alist-get 'preview_picture entry)
+                                                         (wallabag-insert-image-from-url (alist-get 'preview_picture entry))
+                                                         ;; (format "[[%s]]" (alist-get 'preview_picture entry) )
+                                                       ""))
                                   ("domain" (propertize domain-name 'face 'wallabag-domain-name-face))
                                   ("tag" (format (if (string-empty-p tag) "" "(%s)" ) (propertize tag 'face 'wallabag-tag-face) ))
                                   ("reading-time" (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))
                                   (_ item)))
                " ")))
+
+
+;;;###autoload
+(defun wallabag-put-sliced-image-fn (spec alt &optional flags)
+  "TODO"
+  (letf! (defun insert-image (image &optional alt _area _slice)
+           (let ((height (cdr (image-size image t))))
+             (insert-sliced-image image alt nil (max 1 (/ height 20.0)) 1)))
+    (shr-put-image spec alt flags)))
+
+(defun wallabag-insert-image-from-url (url)
+  "Fetch and insert an image from URL."
+  ;; (let ((org-resource-download-policy t))
+  ;;   (propertize " " 'display
+  ;;               ;; (org-file-contents url)
+  ;;               (create-image (org-file-contents url) nil t :width 100 :height 100)
+  ;;               ) )
+
+
+  (with-temp-buffer
+    (wallabag-insert-sliced-image (create-image (org-file-contents url) nil t :width 200 :height 200) nil "hello")
+    ;; (insert-image (create-image (org-file-contents url) nil t :width 200 :height 200) nil nil '(0 0 1.0 0.1) )
+    ;; (insert "\n")
+    ;; (insert-image (create-image (org-file-contents url) nil t :width 200 :height 200) nil nil '(20 40 1.0 0.1) )
+    ;; (insert "\n")
+    ;; (insert-image (create-image (org-file-contents url) nil t :width 200 :height 200) nil nil '(40 60 1.0 0.1) )
+    (buffer-string)
+    )
+
+  )
+
+(defun wallabag--insert-sliced-image (image &optional string area rows cols text)
+  "Insert IMAGE into current buffer at point.
+IMAGE is displayed by inserting STRING into the current buffer
+with a `display' property whose value is the image.  The default
+STRING is a single space.
+AREA is where to display the image.  AREA nil or omitted means
+display it in the text area, a value of `left-margin' means
+display it in the left marginal area, a value of `right-margin'
+means display it in the right marginal area.
+The image is automatically split into ROWS x COLS slices."
+  (unless string (setq string " "))
+  (unless (eq (car-safe image) 'image)
+    (error "Not an image: %s" image))
+  (unless (or (null area) (memq area '(left-margin right-margin)))
+    (error "Invalid area %s" area))
+  (if area
+      (setq image (list (list 'margin area) image))
+    ;; Cons up a new spec equal but not eq to `image' so that
+    ;; inserting it twice in a row (adjacently) displays two copies of
+    ;; the image.  Don't try to avoid this by looking at the display
+    ;; properties on either side so that we DTRT more often with
+    ;; cut-and-paste.  (Yanking killed image text next to another copy
+    ;; of it loses anyway.)
+    (setq image (cons 'image (cdr image))))
+  (let ((x 0.0) (dx (/ 1.0001 (or cols 1)))
+	 (y 0.0) (dy (/ 1.0001 (or rows 1))))
+    (while (< y 1.0)
+      (while (< x 1.0)
+	(let ((start (point)))
+	  (insert string)
+	  (add-text-properties start (point)
+			       `(display ,(list (list 'slice x y dx dy) image)
+					 rear-nonsticky (display keymap)
+                                         keymap ,image-slice-map))
+	  (setq x (+ x dx))))
+      (setq x 0.0
+	    y (+ y dy))
+      (insert text (propertize "\n" 'line-height t) ))))
+
+
+(defun wallabag-insert-sliced-image (image &optional alt text)
+  (let ((height (cdr (image-size image t))))
+    (wallabag--insert-sliced-image image alt nil (max 1 (/ height 40.0)) 1 text)))
+
 
 (defun wallabag-parse-entries-as-list (filter)
   "Parse all entries with FILTER, return as propertized string list."

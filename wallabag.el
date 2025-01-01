@@ -636,12 +636,13 @@ TAGS are seperated by comma."
                     (wallabag-request-tags)
                     (message "Remove Tag Done")))))))
 
-(defun wallabag-add-entry (url tags)
+(defun wallabag-add-entry (&optional url)
   "Add a new entry by URL and TAGS."
-  (interactive (list
-                (read-from-minibuffer "What URL do you want to add? ")
-                (read-from-minibuffer "How about TAGS? ")))
-  (let* ((host wallabag-host)
+  (interactive)
+  (let* ((url (or url (read-from-minibuffer "What URL do you want to add? ") ))
+         ;; FIXME if no tags pull before, it will return empty string
+         (tags (completing-read "How about TAGS? " (wallabag-get-tag-name)))
+         (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token))))
     (request (format "%s/api/entries.json" host)
       :parser 'json-read
@@ -683,23 +684,24 @@ TAGS are seperated by comma."
                           (funcall wallabag-search-print-entry-function data)))
                       (message "Add Entry Done"))))))))
 
-(defun wallabag-insert-entry (title tags)
-  "TODO: Insert a entry by TITLE and TAGS, using current buffer."
-  (interactive (list
-                (read-from-minibuffer "What TITLE do you want to add? " (buffer-name))
-                (read-from-minibuffer "How about TAGS? ")))
-  (let* ((host wallabag-host)
+(defun wallabag-insert-entry (&optional url title content)
+  "Insert a entry by URL, TITLE, and CONTENT."
+  (interactive)
+  (let* ((url (or url (read-from-minibuffer "What URL do you want to add? ") ))
+         ;; FIXME if no tags pull before, it will return empty string
+         (tags (or "" (wallabag-get-tag-name) ))
+         (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token))))
     (require 'org-id)
     (request (format "%s/api/entries.json" host)
       :parser 'json-read
       :type "POST"
-      :data `(("url" . ,(org-id-uuid))
+      :data `(("url" . ,url)
               ("title" . ,title)
-              ("content" . ,(format "<pre>%s</pre>" (buffer-string)))
+              ("content" . ,content)
               ("archive" . 0)
               ("starred" . 0)
-              ("tags" . ,(format "%s,%s" tags major-mode))
+              ("tags" . ,tags)
               ("access_token" . ,token))
       :headers `(("User-Agent" . "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36"))
       :error

@@ -247,6 +247,10 @@ When live editing the filter, it is bound to :live.")
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-request-server-info))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq wallabag-appname (assoc-default 'appname data))
@@ -266,6 +270,10 @@ When live editing the filter, it is bound to :live.")
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-request-user-info))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq wallabag-user-id (assoc-default 'id data))
@@ -301,6 +309,10 @@ in server."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-request-new-entries))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
@@ -347,6 +359,10 @@ non-nil integer PAGE retrieval starts at this page."
         (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                        (message "Wallaget request error: %S" error-thrown)
                        (setq wallabag-retrieving-p nil)))
+        :status-code '((401 . (lambda (&rest _)
+                                (message "Authenticating...")
+                                (wallabag-request-token)
+                                (funcall 'wallabag-request-and-insert-entries num-entries callback args page))))
         :success (cl-function
                   (lambda (&key data &allow-other-keys)
                     ;; save the original string
@@ -416,6 +432,10 @@ non-nil integer PAGE retrieval starts at this page."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-request-and-synchronize-entries))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
@@ -459,6 +479,10 @@ Please notice: this function should be called only when no new entires in the se
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-request-and-delete-entries perpage))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; save the original string
@@ -519,6 +543,10 @@ Please notice: this function should be called only when no new entires in the se
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-request-format format))))
       :success (cl-function
                 (lambda (&key response &allow-other-keys)
                   (message "Done: %s" (request-response-header response "content-type"))
@@ -543,6 +571,10 @@ Please notice: this function should be called only when no new entires in the se
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-request-tags callback))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let ((tag-list (mapcar
@@ -579,6 +611,10 @@ TAGS are seperated by comma."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-add-tags tags))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let* ((inhibit-read-only t)
@@ -622,6 +658,10 @@ TAGS are seperated by comma."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-remove-tag))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let* ((inhibit-read-only t)
@@ -656,6 +696,10 @@ TAGS are seperated by comma."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-add-entry url))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; convert tags array to tag comma seperated string
@@ -707,6 +751,10 @@ TAGS are seperated by comma."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
+      :status-code '((401 . (lambda (&rest _)
+                              (message "Authenticating...")
+                              (wallabag-request-token)
+                              (funcall 'wallabag-insert-entry url title content))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; convert tags array to tag comma seperated string
@@ -744,6 +792,10 @@ TAGS are seperated by comma."
           :error
           (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                          (message "Wallaget request error: %S" error-thrown)))
+          :status-code '((401 . (lambda (&rest _)
+                                  (message "Authenticating...")
+                                  (wallabag-request-token)
+                                  (funcall 'wallabag-delete-entry))))
           :success (cl-function
                     (lambda (&key _data &allow-other-keys)
                       (let ((inhibit-read-only t))
@@ -780,6 +832,10 @@ TAGS are seperated by comma."
           :error
           (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                          (message "Wallaget request error: %S" error-thrown)))
+          :status-code '((401 . (lambda (&rest _)
+                                  (message "Authenticating...")
+                                  (wallabag-request-token)
+                                  (funcall ',(intern (format "wallabag-update-entry-%s" field)) new))))
           :success (cl-function
                     (lambda (&key data &allow-other-keys)
                       (let* ((inhibit-read-only t)

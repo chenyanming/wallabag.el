@@ -1285,6 +1285,7 @@ for other characters, they are printed as they are."
   "Quit *wallabag-search*."
   (interactive)
   (when (eq major-mode 'wallabag-search-mode)
+    (emacsql-close (wallabag-db))
     (quit-window)
     (kill-buffer "*wallabag-search*")
     (wallabag-sidebar-quit)))

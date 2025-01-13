@@ -169,6 +169,7 @@ to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
         (sql (plist-get properties :sql))
         (id (plist-get properties :id))
         (title (plist-get properties :title))
+        (url (plist-get properties :url))
         (next-entry (plist-get properties :next-entry))
         (previous-entry (plist-get properties :previous-entry)))
     (setq candidates (mapcar (lambda(x)
@@ -209,6 +210,7 @@ to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
                              (cond
                               (id (wallabag-db-sql `[:select * :from items :where (= id ,id)]))
                               (title (wallabag-db-sql `[:select * :from items :where (= title ,title)]))
+                              (url (wallabag-db-sql `[:select * :from items :where (= url ,url)]))
                               (previous-entry (wallabag-db-sql `[:select * :from items :where (> id ,previous-entry) :limit 1]) )
                               (next-entry (wallabag-db-sql `[:select * :from items :where (< id ,next-entry) :order-by (desc id) :limit 1]) )
                               (t (wallabag-db-sql (or sql [:select * :from items]))))))

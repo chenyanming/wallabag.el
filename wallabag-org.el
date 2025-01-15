@@ -69,6 +69,30 @@
       (remove-text-properties beg end '(wallabag-mark nil)))))
 
 
+(defun wallabag-org-protocol-link-markdown-copy ()
+  "Copy the marked items as org-protocol markdown links."
+  (interactive)
+  (let ((candidates (wallabag-find-marked-candidates)))
+    (unless candidates
+      (setq candidates (list (wallabag-find-candidate-at-point))))
+    (kill-new
+     (with-temp-buffer
+       (dolist (cand candidates)
+         (let* ((id (alist-get 'id cand))
+                (title (alist-get 'title cand))
+                (org-protocol-link (format "[%s](%s)" title (url-encode-url (format "org-protocol://wallabag?id=%s&title=%s" id title) ))  ))
+           ;; (insert (format "[[wallabag:%s][%s]]\n" id title))
+           (insert org-protocol-link (if (> (length candidates) 1) "\n" ""))
+           (message "Copied: %s" org-protocol-link)))
+       (buffer-string)))
+    ;; remove overlays and text properties
+    (let* ((beg (point-min))
+           (end (point-max))
+           (inhibit-read-only t))
+      (remove-overlays beg end)
+      (remove-text-properties beg end '(wallabag-mark nil)))))
+
+
 (defun wallabag-org-protocol-link-copy ()
   "Copy the marked items as org-protocol links."
   (interactive)

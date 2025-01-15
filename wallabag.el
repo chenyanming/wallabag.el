@@ -1030,6 +1030,7 @@ TAGS are seperated by comma."
       (kbd "y o") 'wallabag-org-link-copy
       (kbd "y t") 'wallabag-org-title-copy
       (kbd "y u") 'wallabag-org-url-copy
+      (kbd "y m") 'wallabag-org-protocol-link-markdown-copy
       (kbd "y y") 'wallabag-org-protocol-link-copy
       (kbd "t") 'wallabag-add-tags
       (kbd "T") 'wallabag-remove-tag

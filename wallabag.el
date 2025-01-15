@@ -994,6 +994,7 @@ TAGS are seperated by comma."
     (define-key map "N" #'wallabag-next-entry)
     (define-key map "P" #'wallabag-previous-entry)
     (define-key map "w" #'wallabag-org-link-copy)
+    (define-key map "W" #'wallabag-org-protocol-link-copy)
     (define-key map "t" #'wallabag-add-tags)
     (define-key map "T" #'wallabag-remove-tag)
     (define-key map "'" #'wallabag-goto-sidebar)
@@ -1026,7 +1027,10 @@ TAGS are seperated by comma."
       (kbd "k") 'wallabag-previous-entry
       (kbd "n") 'wallabag-search-next-page
       (kbd "p") 'wallabag-search-previous-page
-      (kbd "y") 'wallabag-org-link-copy
+      (kbd "y o") 'wallabag-org-link-copy
+      (kbd "y t") 'wallabag-org-title-copy
+      (kbd "y u") 'wallabag-org-url-copy
+      (kbd "y y") 'wallabag-org-protocol-link-copy
       (kbd "t") 'wallabag-add-tags
       (kbd "T") 'wallabag-remove-tag
       (kbd "'") 'wallabag-list-tags

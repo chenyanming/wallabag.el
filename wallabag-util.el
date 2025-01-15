@@ -51,7 +51,7 @@ Alist with elements in form (emoji . image)")
 (defun wallabag-find-candidate-at-point ()
   "Find candidate at point and return the list."
   (interactive)
-  (get-text-property (point) 'wallabag-entry))
+  (get-text-property (if (eq major-mode 'wallabag-entry-mode) (point-min) (point)) 'wallabag-entry))
 
 (defun wallabag-find-marked-candidates ()
   "Find marked candidates and return the alist."

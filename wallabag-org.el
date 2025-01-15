@@ -17,8 +17,73 @@
        (dolist (cand candidates)
          (let ((id (alist-get 'id cand))
                (title (alist-get 'title cand)))
-           (insert (format "[[wallabag:%s][%s]]\n" id title))
+           (insert (format "[[wallabag:%s][%s]]" id title) (if (> (length candidates) 1) "\n" ""))
            (message "Copied: %s - \"%s\" as wallabag org link." id title)))
+       (buffer-string)))
+    ;; remove overlays and text properties
+    (let* ((beg (point-min))
+           (end (point-max))
+           (inhibit-read-only t))
+      (remove-overlays beg end)
+      (remove-text-properties beg end '(wallabag-mark nil)))))
+
+
+(defun wallabag-org-title-copy ()
+  "Copy the marked items' titles."
+  (interactive)
+  (let ((candidates (wallabag-find-marked-candidates)))
+    (unless candidates
+      (setq candidates (list (wallabag-find-candidate-at-point))))
+    (kill-new
+     (with-temp-buffer
+       (dolist (cand candidates)
+         (let* ((title (alist-get 'title cand)))
+           (insert title (if (> (length candidates) 1) "\n" ""))
+           (message "Copied: %s" title)))
+       (buffer-string)))
+    ;; remove overlays and text properties
+    (let* ((beg (point-min))
+           (end (point-max))
+           (inhibit-read-only t))
+      (remove-overlays beg end)
+      (remove-text-properties beg end '(wallabag-mark nil)))))
+
+(defun wallabag-org-url-copy ()
+  "Copy the marked items' urls."
+  (interactive)
+  (let ((candidates (wallabag-find-marked-candidates)))
+    (unless candidates
+      (setq candidates (list (wallabag-find-candidate-at-point))))
+    (kill-new
+     (with-temp-buffer
+         (dolist (cand candidates)
+         (let* ((url (alist-get 'url cand)))
+           (insert url (if (> (length candidates) 1) "\n" ""))
+           (message "Copied: %s" url)))
+         (buffer-string)))
+    ;; remove overlays and text properties
+    (let* ((beg (point-min))
+           (end (point-max))
+           (inhibit-read-only t))
+      (remove-overlays beg end)
+      (remove-text-properties beg end '(wallabag-mark nil)))))
+
+
+(defun wallabag-org-protocol-link-copy ()
+  "Copy the marked items as org-protocol links."
+  (interactive)
+  (let ((candidates (wallabag-find-marked-candidates)))
+    (unless candidates
+      (setq candidates (list (wallabag-find-candidate-at-point))))
+    (kill-new
+     (with-temp-buffer
+       (dolist (cand candidates)
+         (let* ((id (alist-get 'id cand))
+                (title (alist-get 'title cand))
+                (org-protocol-link (url-encode-url (format "org-protocol://wallabag?id=%s&title=%s" id title) ) ))
+           ;; (insert (format "[[wallabag:%s][%s]]\n" id title))
+           (insert org-protocol-link (if (> (length candidates) 1) "\n" ""))
+           (message "Copied: %s" org-protocol-link)))
        (buffer-string)))
     ;; remove overlays and text properties
     (let* ((beg (point-min))
@@ -43,10 +108,13 @@
 
 
 (defun wallabag-org-protocol (data)
-  (let* ((url (org-protocol-sanitize-uri (plist-get data :url)))
-         (title (or (wallabag-capture-html--nbsp-to-space (string-trim (plist-get data :title))) ""))
-         (content (or (wallabag-capture-html--nbsp-to-space (string-trim (plist-get data :body))) "")))
-    (wallabag-insert-entry url title content)
+  (let* ((id (plist-get data :id))
+         (url (org-protocol-sanitize-uri (or (plist-get data :url) "")))
+         (title (or (wallabag-capture-html--nbsp-to-space (string-trim (or (plist-get data :title) ""))) ""))
+         (content (or (wallabag-capture-html--nbsp-to-space (string-trim (or (plist-get data :body) ""))) "")))
+    (if id
+        (wallabag-show-entry (car (wallabag-db-select :id (string-to-number id))))
+      (wallabag-insert-entry url title content))
     nil))
 
 (defun wallabag-capture-html--nbsp-to-space (s)

@@ -1183,10 +1183,10 @@ If list mode, the title is full width."
   :type '(choice (const :tag "Table" table)
                  (const :tag "List" list)))
 
-(defcustom wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date" "\n" "content" "\n ")
+(defcustom wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date" "\n" "content" "seperator")
   "The items to be printed in the search buffer.
 The items are printed in the order of the list.
-title, domain, tag, reading-time, date, content are supported.
+title, domain, tag, reading-time, date, content, seperator are supported.
 for other characters, they are printed as they are."
   :type '(repeat string)
   :group 'wallabag)
@@ -1250,6 +1250,7 @@ for other characters, they are printed as they are."
                                   ("domain" (propertize domain-name 'face 'wallabag-domain-name-face))
                                   ("tag" (format (if (string-empty-p tag) "" "(%s)" ) (propertize tag 'face 'wallabag-tag-face) ))
                                   ("reading-time" (propertize (concat (number-to-string reading-time) " min") 'face 'wallabag-reading-time-face))
+                                  ("seperator" (format "\n%s" (make-string (window-width) ?-)))
                                   (_ item)))
                " ")))
 

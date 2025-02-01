@@ -1350,6 +1350,7 @@ for other characters, they are printed as they are."
               (text-property-search-forward 'wallabag-entry nil)
               (goto-char (1+ (point)))
               (setq new (alist-get 'id (get-text-property (point) 'wallabag-entry nil)))
+              (recenter (- wallabag-search-page-max-rows))
               ;; last one in the page
               (unless (text-property-not-all (point) (point-max) 'wallabag-entry nil)
                 (wallabag-search-next-page))))

@@ -1241,7 +1241,9 @@ for other characters, they are printed as they are."
                                                                               (- wallabag-search-title-max-width (length star)))
                                                                        :left) 'face 'wallabag-archive-face)
                                                         (propertize title 'face 'wallabag-title-face)))))
-                                  ("content" (propertize (if (string-empty-p content) ""
+                                  ("content" (propertize (if (or (string-empty-p content)
+                                                                 (eq content nil))
+                                                             ""
                                                            (s-word-wrap (window-width (selected-window))
                                                                         (s-truncate
                                                                          wallabag-search-content-max-width

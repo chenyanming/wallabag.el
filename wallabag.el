@@ -1247,7 +1247,10 @@ for other characters, they are printed as they are."
                                                            (s-word-wrap (window-width (selected-window))
                                                                         (s-truncate
                                                                          wallabag-search-content-max-width
-                                                                         (replace-regexp-in-string "[[:space:]\n\r]+" " " (wallabag-render-content content))) ))
+                                                                         (replace-regexp-in-string "[[:space:]\n\r]+" " "
+                                                                                                   (replace-regexp-in-string "<[^>]+>" "" content)
+                                                                                                   ;; (wallabag-render-content content) ;; too slow, disable
+                                                                                                   ))))
                                                          'face 'wallabag-content-face))
                                   ("domain" (propertize domain-name 'face 'wallabag-domain-name-face))
                                   ("tag" (format (if (string-empty-p tag) "" "(%s)" ) (propertize tag 'face 'wallabag-tag-face) ))

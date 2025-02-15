@@ -19,11 +19,9 @@
 
 (defface wallabag-title-face
   '((((class color) (background light))
-     (:weight bold
-      :height 1.1))
+     (:height 1.0))
     (((class color) (background dark))
-     (:weight bold
-      :height 1.1))
+     (:height 1.0))
     (t (:inherit default)))
   "Face used for title."
   :group 'wallabag-faces)

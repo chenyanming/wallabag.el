@@ -1183,7 +1183,7 @@ If list mode, the title is full width."
   :type '(choice (const :tag "Table" table)
                  (const :tag "List" list)))
 
-(defcustom wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date" "\n" "content" "seperator")
+(defcustom wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date")
   "The items to be printed in the search buffer.
 The items are printed in the order of the list.
 title, domain, tag, reading-time, date, content, seperator are supported.
@@ -1355,7 +1355,7 @@ for other characters, they are printed as they are."
               (text-property-search-forward 'wallabag-entry nil)
               (goto-char (1+ (point)))
               (setq new (alist-get 'id (get-text-property (point) 'wallabag-entry nil)))
-              (recenter (round (/ (window-body-height) 2)))
+              ;; (recenter (round (/ (window-body-height) 2)))
               ;; last one in the page
               (unless (text-property-not-all (point) (point-max) 'wallabag-entry nil)
                 (wallabag-search-next-page))))
@@ -1375,7 +1375,8 @@ for other characters, they are printed as they are."
             (wallabag-search-previous-page)
             (goto-char (point-max))
             (text-property-search-backward 'wallabag-entry nil)
-            (recenter (round (/ (window-body-height) 2))))
+            ;; (recenter (round (/ (window-body-height) 2)))
+            )
         (let ((ori "") (new ""))
           (while (and (equal new ori) new ori (> (line-number-at-pos) 1))
             (forward-line -1)
@@ -1800,7 +1801,7 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
   "Get wallabag entries by PAGE."
   (wallabag-db-select :sql (wallabag-search-parse-filter wallabag-search-filter :limit wallabag-search-page-max-rows :page page)))
 
-(defcustom wallabag-search-page-max-rows 8
+(defcustom wallabag-search-page-max-rows 31
   "The maximum number of entries to display in a single page."
   :group 'wallabag
   :type 'integer)

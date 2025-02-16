@@ -10,7 +10,6 @@
 - [[#image-caching][Image Caching]]
 - [[#retrieve-new-entries-after-m-x-wallabag][Retrieve new entries after =M-x wallabag=]]
 - [[#keybindings][Keybindings]]
-- [[#change-logs][Change logs]]
 
 * Description
 Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
@@ -62,6 +61,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 (setq wallabag-password "xx") ;; password
 (setq wallabag-clientid "xx") ;; created with API clients management
 (setq wallabag-secret "xx") ;; created with API clients management
+(setq wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date")) ;; control what content should be show in *wallabag-search*
 #+END_SRC
 
 ** use-package (load-path)
@@ -75,6 +75,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
   (setq wallabag-password "xx") ;; password
   (setq wallabag-clientid "xx") ;; created with API clients management
   (setq wallabag-secret "xx") ;; created with API clients management
+  (setq wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date")) ;; control what content should be show in *wallabag-search*
   ;; (setq wallabag-db-file "~/OneDrive/Org/wallabag.sqlite") ;; optional, default is saved to ~/.emacs.d/.cache/wallabag.sqlite
   ;; (run-with-timer 0 3540 'wallabag-request-token) ;; optional, auto refresh token, token should refresh every hour
   )
@@ -181,13 +182,3 @@ PS:
     | p                     | wallabag-sidebar-find-previous-tag | Filter by previous tag.   |
     | q                     | wallabag-sidebar-quit              | Quit sidebar.             |
 
-* Change logs
-** =2021-04-13=
-Version *1.1.0*:
-- Add ~wallabag-request-new-entries~. It only retrieves and update the new entries.
-- Add ~wallabag-search-synchronize-and-clear-filter~, and bind to ~U~.
-- Rename ~wallabag-request-entries~ to ~wallabag-request-and-synchronize-entries~.
-- Rename ~wallabag-number-of-entries-to-be-retrieved~ to ~wallabag-number-of-entries-to-be-synchronized~.
-
-** =2021-04-13=
-Version *1.0.0*:

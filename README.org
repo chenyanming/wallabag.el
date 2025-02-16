@@ -62,6 +62,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 (setq wallabag-clientid "xx") ;; created with API clients management
 (setq wallabag-secret "xx") ;; created with API clients management
 (setq wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date")) ;; control what content should be show in *wallabag-search*
+(setq wallabag-search-page-max-rows 32) ;; how many items shown in one page
 #+END_SRC
 
 ** use-package (load-path)
@@ -76,8 +77,8 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
   (setq wallabag-clientid "xx") ;; created with API clients management
   (setq wallabag-secret "xx") ;; created with API clients management
   (setq wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date")) ;; control what content should be show in *wallabag-search*
+(setq wallabag-search-page-max-rows 32) ;; how many items shown in one page
   ;; (setq wallabag-db-file "~/OneDrive/Org/wallabag.sqlite") ;; optional, default is saved to ~/.emacs.d/.cache/wallabag.sqlite
-  ;; (run-with-timer 0 3540 'wallabag-request-token) ;; optional, auto refresh token, token should refresh every hour
   )
 #+end_src
 

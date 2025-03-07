@@ -789,7 +789,7 @@ TAGS are seperated by comma."
 (defun wallabag-delete-entry ()
   "Delete a entry at point."
   (interactive)
-  (let* ((entry (get-text-property (point) 'wallabag-entry) )
+  (let* ((entry (wallabag-find-candidate-at-point) )
          (id (alist-get 'id entry))
          (title (alist-get 'title entry))
          (host wallabag-host)
@@ -1441,6 +1441,7 @@ for other characters, they are printed as they are."
     (define-key map "]" #'wallabag-next-entry)
     (define-key map "&" #'wallabag-browse-with-external-browser)
     (define-key map "q" #'wallabag-entry-quit)
+    (define-key map "d" #'wallabag-delete-entry)
     (define-key map "v" #'wallabag-view)
     (define-key map "V" #'wallabag-browse-url)
     (define-key map "o" #'wallabag-original-entry)
@@ -1451,9 +1452,10 @@ for other characters, they are printed as they are."
     (evil-define-key '(normal emacs) wallabag-entry-mode-map
       (kbd "[") 'wallabag-previous-entry
       (kbd "]") 'wallabag-next-entry
-      (kbd "&") 'wallabag-browse-with-external-browser
+      (kbd "&") 'wallabag-browse-url
       (kbd "g r") 'wallabag-view
       (kbd "o") 'wallabag-original-entry
+      (kbd "D") 'wallabag-delete-entry
       (kbd "q") 'wallabag-entry-quit))
 
 (define-derived-mode wallabag-entry-mode fundamental-mode "wallabag-entry"

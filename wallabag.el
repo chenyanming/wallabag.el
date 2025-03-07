@@ -1818,7 +1818,7 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
   :group 'wallabag
   :type 'integer)
 
-(defcustom wallabag-show-entry-after-creation t
+(defcustom wallabag-show-entry-after-creation nil
   "If non-nil, show the entry after adding it."
   :group 'wallabag
   :type 'boolean)

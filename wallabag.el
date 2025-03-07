@@ -679,7 +679,14 @@ TAGS are seperated by comma."
 (defun wallabag-add-entry (&optional url)
   "Add a new entry by URL and TAGS."
   (interactive)
-  (let* ((url (or url (read-from-minibuffer "What URL do you want to add? ") ))
+  (let* ((url (pcase major-mode
+                ('elfeed-show-mode
+                 (if elfeed-show-entry (elfeed-entry-link elfeed-show-entry) "" ))
+                ('eaf-mode
+                 (abbreviate-file-name eaf--buffer-url))
+                ('eww-mode
+                 (plist-get eww-data :url))
+                (_ (if url url (read-from-minibuffer "What URL do you want to add? ")))))
          ;; FIXME if no tags pull before, it will return empty string
          (tags (wallabag-get-tag-name))
          (host wallabag-host)

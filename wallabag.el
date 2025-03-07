@@ -733,7 +733,9 @@ TAGS are seperated by comma."
                         (save-excursion
                           (goto-char (point-min))
                           (funcall wallabag-search-print-entry-function data)))
-                      (message "Add Entry Done"))))))))
+                      (message "Add Entry: %s" id)
+                      (if wallabag-show-entry-after-creation
+                          (wallabag-show-entry (car (wallabag-db-select :id id))) ))))))))
 
 (defun wallabag-insert-entry (&optional url title content)
   "Insert a entry by URL, TITLE, and CONTENT."
@@ -773,13 +775,16 @@ TAGS are seperated by comma."
                                (alist-get 'tag data)
                              (wallabag-convert-tags-to-tag data)))
                           data))
-                  (let ((inhibit-read-only t))
+                  (let ((inhibit-read-only t)
+                        (id (alist-get 'id data)))
                     (wallabag-db-insert (list data))
                     (with-current-buffer (wallabag-search-buffer)
                       (save-excursion
                         (goto-char (point-min))
                         (funcall wallabag-search-print-entry-function data)))
-                    (message "Add Entry Done")))))))
+                    (message "Insert Entry: %s" id)
+                    (if wallabag-show-entry-after-creation
+                        (wallabag-show-entry (car (wallabag-db-select :id id))) )))))))
 
 (defun wallabag-delete-entry ()
   "Delete a entry at point."
@@ -1812,6 +1817,11 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
   "The maximum number of entries to display in a single page."
   :group 'wallabag
   :type 'integer)
+
+(defcustom wallabag-show-entry-after-creation t
+  "If non-nil, show the entry after adding it."
+  :group 'wallabag
+  :type 'boolean)
 
 (defvar wallabag-search-current-page 1
   "The number of current page in the current search result.")

@@ -681,7 +681,7 @@ TAGS are seperated by comma."
   (interactive)
   (let* ((url (or url (read-from-minibuffer "What URL do you want to add? ") ))
          ;; FIXME if no tags pull before, it will return empty string
-         (tags (completing-read "How about TAGS? " (wallabag-get-tag-name)))
+         (tags (wallabag-get-tag-name))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token))))
     (request (format "%s/api/entries.json" host)
@@ -733,7 +733,7 @@ TAGS are seperated by comma."
   (interactive)
   (let* ((url (or url (read-from-minibuffer "What URL do you want to add? ") ))
          ;; FIXME if no tags pull before, it will return empty string
-         (tags (or "" (wallabag-get-tag-name) ))
+         (tags (wallabag-get-tag-name))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token))))
     (require 'org-id)

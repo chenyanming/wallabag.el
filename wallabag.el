@@ -387,15 +387,16 @@ non-nil integer PAGE retrieval starts at this page."
                     ;; refresh dashboard
                     (with-silent-modifications
                       (wallabag-request-tags)
-                      (with-current-buffer (wallabag-search-buffer)
-                        (setq wallabag-search-filter "")
-                        (setq current (point))
-                        (setq position (window-start))
-                        (erase-buffer)
-                        (wallabag-search-update-buffer)
-                        (wallabag-search-mode)
-                        (set-window-start (selected-window) position)
-                        (goto-char current)))
+                      (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                          (with-current-buffer (get-buffer "*wallabag-search*")
+                            (setq wallabag-search-filter "")
+                            (setq current (point))
+                            (setq position (window-start))
+                            (erase-buffer)
+                            (wallabag-search-update-buffer)
+                            (wallabag-search-mode)
+                            (set-window-start (selected-window) position)
+                            (goto-char current)) ))
 
                     ;; indicate the retrieving is finished, and update the header
                     (setq wallabag-retrieving-p nil)
@@ -516,15 +517,16 @@ Please notice: this function should be called only when no new entires in the se
                      (t (error "Synchronization error: number-to-be-deleted is %s", number-to-be-deleted))))
                   (with-silent-modifications
                     (wallabag-request-tags)
-                    (with-current-buffer (wallabag-search-buffer)
-                      (setq wallabag-search-filter "")
-                      (setq current (point))
-                      (setq position (window-start))
-                      (erase-buffer)
-                      (wallabag-search-update-buffer)
-                      (wallabag-search-mode)
-                      (set-window-start (selected-window) position)
-                      (goto-char current)))
+                    (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                        (with-current-buffer (get-buffer "*wallabag-search*")
+                          (setq wallabag-search-filter "")
+                          (setq current (point))
+                          (setq position (window-start))
+                          (erase-buffer)
+                          (wallabag-search-update-buffer)
+                          (wallabag-search-mode)
+                          (set-window-start (selected-window) position)
+                          (goto-char current)) ))
 
                   ;; indicate the retrieving is finished, and update the header
                   (setq wallabag-retrieving-p nil))))))
@@ -532,7 +534,7 @@ Please notice: this function should be called only when no new entires in the se
 (defun wallabag-request-format (&optional format)
   "TODO: Request the format to be exported."
   (interactive)
-  (let* ((entry (get-text-property (point) 'wallabag-entry nil))
+  (let* ((entry (wallabag-find-candidate-at-point))
          (id (alist-get 'id entry))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token))))
@@ -622,10 +624,11 @@ TAGS are seperated by comma."
                          (tag (wallabag-convert-tags-to-tag data)))
                     (wallabag-db-update-tags id tags)
                     (wallabag-db-update-tag id tag)
-                    (with-current-buffer (wallabag-search-buffer)
-                      (setq ori (point))
-                      (wallabag-search-update-buffer)
-                      (goto-char ori))
+                    (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                        (with-current-buffer (get-buffer "*wallabag-search*")
+                          (setq ori (point))
+                          (wallabag-search-update-buffer)
+                          (goto-char ori)) )
                     (wallabag-request-tags)
                     (if (eq major-mode 'wallabag-entry-mode)
                         (wallabag-show-entry (car (wallabag-db-select :id id))))
@@ -634,7 +637,7 @@ TAGS are seperated by comma."
 (defun wallabag-remove-tag ()
   "Remove one tag of the entry."
   (interactive)
-  (let* ((entry (get-text-property (point) 'wallabag-entry) )
+  (let* ((entry (wallabag-find-candidate-at-point) )
          (id (alist-get 'id entry))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token)))
@@ -671,10 +674,11 @@ TAGS are seperated by comma."
                         (tag (wallabag-convert-tags-to-tag data)))
                     (wallabag-db-update-tags id tags)
                     (wallabag-db-update-tag id tag)
-                    (with-current-buffer (wallabag-search-buffer)
-                      (setq ori (point))
-                      (wallabag-search-update-buffer)
-                      (goto-char ori))
+                    (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                        (with-current-buffer (get-buffer "*wallabag-search*")
+                          (setq ori (point))
+                          (wallabag-search-update-buffer)
+                          (goto-char ori)) )
                     (wallabag-request-tags)
                     (message "Remove Tag Done")))))))
 
@@ -731,10 +735,11 @@ TAGS are seperated by comma."
                           (goto-char (wallabag-find-candidate-location id))
                           (wallabag-flash-show (line-beginning-position) (line-end-position) 'highlight 0.5))
                       (wallabag-db-insert (list data))
-                      (with-current-buffer (wallabag-search-buffer)
-                        (save-excursion
-                          (goto-char (point-min))
-                          (funcall wallabag-search-print-entry-function data)))
+                      (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                          (with-current-buffer (get-buffer "*wallabag-search*")
+                            (save-excursion
+                              (goto-char (point-min))
+                              (funcall wallabag-search-print-entry-function data))) )
                       (message "Add Entry: %s" id)
                       (if wallabag-show-entry-after-creation
                           (wallabag-show-entry (car (wallabag-db-select :id id))) ))))))))
@@ -781,10 +786,11 @@ TAGS are seperated by comma."
                   (let ((inhibit-read-only t)
                         (id (alist-get 'id data)))
                     (wallabag-db-insert (list data))
-                    (with-current-buffer (wallabag-search-buffer)
-                      (save-excursion
-                        (goto-char (point-min))
-                        (funcall wallabag-search-print-entry-function data)))
+                    (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                        (with-current-buffer (get-buffer "*wallabag-search*")
+                          (save-excursion
+                            (goto-char (point-min))
+                            (funcall wallabag-search-print-entry-function data))) )
                     (message "Insert Entry: %s" id)
                     (if wallabag-show-entry-after-creation
                         (wallabag-show-entry (car (wallabag-db-select :id id))) )))))))
@@ -815,10 +821,13 @@ TAGS are seperated by comma."
                     (lambda (&key _data &allow-other-keys)
                       (let ((inhibit-read-only t))
                         (wallabag-db-delete id)
-                        (with-current-buffer (wallabag-search-buffer)
-                          (setq ori (point))
-                          (wallabag-search-update-buffer wallabag-search-current-page)
-                          (goto-char ori))
+                        (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                            (with-current-buffer (get-buffer "*wallabag-search*")
+                              (setq ori (point))
+                              (wallabag-search-update-buffer wallabag-search-current-page)
+                              (goto-char ori)) )
+                        (if (eq major-mode 'wallabag-entry-mode)
+                            (kill-buffer))
                         (message "Deletion Done"))))))))
 
 
@@ -828,11 +837,11 @@ TAGS are seperated by comma."
      ,(format "Set %s." field)
      (interactive (list (if ,int-or-str
                             (if (eq (alist-get ',(intern (alist-get field wallabag-field-mapping nil nil #'equal))
-                                               (get-text-property (point) 'wallabag-entry)) 1 ) 0 1)
+                                               (wallabag-find-candidate-at-point)) 1 ) 0 1)
                           (read-from-minibuffer ,(format "Insert a new %s? " field)
                                                 (alist-get ',(intern (alist-get field wallabag-field-mapping nil nil #'equal))
-                                                           (get-text-property (point) 'wallabag-entry))))))
-     (let* ((entry (get-text-property (point) 'wallabag-entry) )
+                                                           (wallabag-find-candidate-at-point))))))
+     (let* ((entry (wallabag-find-candidate-at-point) )
          (id (alist-get 'id entry))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token)))
@@ -856,10 +865,11 @@ TAGS are seperated by comma."
                       (let* ((inhibit-read-only t)
                              (content (alist-get ',(intern (alist-get field wallabag-field-mapping nil nil #'equal)) data)))
                         (,(intern (format "wallabag-db-update-%s" (alist-get field wallabag-field-mapping nil nil #'equal))) id content)
-                        (with-current-buffer (wallabag-search-buffer)
-                          (setq ori (point))
-                          (wallabag-search-update-buffer)
-                          (goto-char ori))
+                        (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                            (with-current-buffer (get-buffer "*wallabag-search*")
+                              (setq ori (point))
+                              (wallabag-search-update-buffer)
+                              (goto-char ori)) )
                         (message "Update %s Done" ,field))))))))
 
 (wallabag-update-entry "title" nil)
@@ -1115,14 +1125,12 @@ Argument EVENT mouse event."
 (defun wallabag-view ()
   "View the wallabag entry."
   (interactive)
-  (wallabag-show-entry (or (get-text-property (point) 'wallabag-entry nil)
-                           (get-text-property (point-min) 'wallabag-entry nil))))
+  (wallabag-show-entry (wallabag-find-candidate-at-point)))
 
 (defun wallabag-browse-with-external-browser ()
   "View the wallabag entry with `wallabag-browser-function'."
   (interactive)
-  (let* ((entry (or (get-text-property (point) 'wallabag-entry nil)
-                    (get-text-property (point-min) 'wallabag-entry nil)))
+  (let* ((entry (wallabag-find-candidate-at-point))
          (title (or (alist-get 'title entry) "NO TITLE"))
          (reading-time (alist-get 'reading_time entry))
          (created-at (alist-get 'created_at entry))
@@ -1447,6 +1455,7 @@ for other characters, they are printed as they are."
     (define-key map "q" #'wallabag-entry-quit)
     (define-key map "d" #'wallabag-delete-entry)
     (define-key map "t" #'wallabag-add-tags)
+    (define-key map "T" #'wallabag-remove-tag)
     (define-key map "v" #'wallabag-view)
     (define-key map "V" #'wallabag-browse-url)
     (define-key map "o" #'wallabag-original-entry)
@@ -1461,6 +1470,7 @@ for other characters, they are printed as they are."
       (kbd "g r") 'wallabag-view
       (kbd "o") 'wallabag-original-entry
       (kbd "t") 'wallabag-add-tags
+      (kbd "T") 'wallabag-remove-tag
       (kbd "D") 'wallabag-delete-entry
       (kbd "q") 'wallabag-entry-quit))
 

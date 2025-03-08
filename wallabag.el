@@ -595,7 +595,7 @@ Please notice: this function should be called only when no new entires in the se
 TAGS are seperated by comma."
   (interactive (list
                 (wallabag-get-tag-name)))
-  (let* ((entry (get-text-property (point) 'wallabag-entry) )
+  (let* ((entry (wallabag-find-candidate-at-point) )
          (id (alist-get 'id entry))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token)))
@@ -627,6 +627,8 @@ TAGS are seperated by comma."
                       (wallabag-search-update-buffer)
                       (goto-char ori))
                     (wallabag-request-tags)
+                    (if (eq major-mode 'wallabag-entry-mode)
+                        (wallabag-show-entry (car (wallabag-db-select :id id))))
                     (message "Add Tags Done")))))))
 
 (defun wallabag-remove-tag ()
@@ -742,7 +744,8 @@ TAGS are seperated by comma."
   (interactive)
   (let* ((url (or url (read-from-minibuffer "What URL do you want to add? ") ))
          ;; FIXME if no tags pull before, it will return empty string
-         (tags (wallabag-get-tag-name))
+         ;; (tags (wallabag-get-tag-name))
+         (tags "") ;; use empty string for now, it is faster to insert, and tags can be added later
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token))))
     (require 'org-id)
@@ -1035,6 +1038,7 @@ TAGS are seperated by comma."
       (kbd "<DEL>") 'wallabag-unmark-and-backward
       (kbd "a") 'wallabag-add-entry
       (kbd "d") 'wallabag-delete-entry
+      (kbd "D") 'wallabag-delete-entry
       (kbd "j") 'wallabag-next-entry
       (kbd "k") 'wallabag-previous-entry
       (kbd "n") 'wallabag-search-next-page
@@ -1442,6 +1446,7 @@ for other characters, they are printed as they are."
     (define-key map "&" #'wallabag-browse-with-external-browser)
     (define-key map "q" #'wallabag-entry-quit)
     (define-key map "d" #'wallabag-delete-entry)
+    (define-key map "t" #'wallabag-add-tags)
     (define-key map "v" #'wallabag-view)
     (define-key map "V" #'wallabag-browse-url)
     (define-key map "o" #'wallabag-original-entry)
@@ -1455,6 +1460,7 @@ for other characters, they are printed as they are."
       (kbd "&") 'wallabag-browse-url
       (kbd "g r") 'wallabag-view
       (kbd "o") 'wallabag-original-entry
+      (kbd "t") 'wallabag-add-tags
       (kbd "D") 'wallabag-delete-entry
       (kbd "q") 'wallabag-entry-quit))
 

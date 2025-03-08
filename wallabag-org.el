@@ -164,9 +164,9 @@
       ;; if we `paw-server-html-file' exists, we use it to insert the entry
       (if (boundp 'paw-server-html-file)
           (when (file-exists-p paw-server-html-file)
-            (wallabag-insert-entry url (with-temp-buffer
-                                         (insert-file-contents paw-server-html-file)
-                                         (buffer-string)))
+            (wallabag-insert-entry url title (with-temp-buffer
+                                               (insert-file-contents paw-server-html-file)
+                                               (buffer-string)))
             (delete-file paw-server-html-file))
         (wallabag-insert-entry url title content)))
     nil))

@@ -161,7 +161,14 @@
          (content (or (wallabag-capture-html--nbsp-to-space (string-trim (or (plist-get data :body) ""))) "")))
     (if id
         (wallabag-show-entry (car (wallabag-db-select :id (string-to-number id))))
-      (wallabag-insert-entry url title content))
+      ;; if we `paw-server-html-file' exists, we use it to insert the entry
+      (if (boundp 'paw-server-html-file)
+          (when (file-exists-p paw-server-html-file)
+            (wallabag-insert-entry url (with-temp-buffer
+                                         (insert-file-contents paw-server-html-file)
+                                         (buffer-string)))
+            (delete-file paw-server-html-file))
+        (wallabag-insert-entry url title content)))
     nil))
 
 (defun wallabag-capture-html--nbsp-to-space (s)

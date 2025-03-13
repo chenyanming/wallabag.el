@@ -162,8 +162,9 @@
     (if id
         (wallabag-show-entry (car (wallabag-db-select :id (string-to-number id))))
       ;; if we `paw-server-html-file' exists, we use it to insert the entry
-      (if (boundp 'paw-server-html-file)
-          (when (file-exists-p paw-server-html-file)
+      (if (and (boundp 'paw-server-html-file)
+               (file-exists-p paw-server-html-file))
+          (progn
             (wallabag-insert-entry url title (with-temp-buffer
                                                (insert-file-contents paw-server-html-file)
                                                (buffer-string)))

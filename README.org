@@ -9,6 +9,7 @@
 - [[#installation-and-configuration][Installation and Configuration]]
 - [[#image-caching][Image Caching]]
 - [[#retrieve-new-entries-after-m-x-wallabag][Retrieve new entries after =M-x wallabag=]]
+- [[#use-org-protocol-to-save-page][Use org-protocol to save page]]
 - [[#keybindings][Keybindings]]
 
 * Description
@@ -120,6 +121,12 @@ Wallabag will not download the images, but using Emacs [[https://www.gnu.org/sof
 #+begin_src emacs-lisp
 (add-hook 'wallabag-after-render-hook 'wallabag-search-update-and-clear-filter)
 #+end_src
+
+
+* Use org-protocol to save page
+- If [[https://www.piwheels.org/project/emacs-paw/][paw-server]] is running, use [[file:wallabag_insert_entry.js]] (send html to paw-server, and save the page to wallabag)
+- If [[https://www.piwheels.org/project/emacs-paw/][paw-server]] is not running use [[file:wallabag_add_entry.js]] (only send url to wallabag server)
+
 
 * Keybindings
 Start with ~M-x wallabag~. 

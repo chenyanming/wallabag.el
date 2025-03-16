@@ -770,7 +770,7 @@ TAGS are seperated by comma."
                                 (goto-char (point-min))
                                 (funcall wallabag-search-print-entry-function data))) )
                         (message "Add Entry: %s" id)
-                        (if show-entry
+                        (if wallabag-show-entry-after-creation
                             (wallabag-show-entry (car (wallabag-db-select :id id))) ))))))))
 
 (defun wallabag-insert-entry (&optional url title content)

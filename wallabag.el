@@ -198,6 +198,8 @@ When live editing the filter, it is bound to :live.")
 (defvar wallabag-live-filteringp nil)
 (defvar wallabag-group-filteringp nil)
 
+(defvar wallabag-search-entries-length 0)
+
 (defcustom wallabag-css-file
   (concat (file-name-directory load-file-name) "default.css")
   "Wallabag css file when call `wallabag-browse-with-external-browser'."
@@ -216,6 +218,23 @@ When live editing the filter, it is bound to :live.")
                                      ("authors" . "published_by")
                                      ("public" . "is_public")
                                      ("origin_url" . "origin_url"))))
+
+(defcustom wallabag-search-page-max-rows 31
+  "The maximum number of entries to display in a single page."
+  :group 'wallabag
+  :type 'integer)
+
+(defcustom wallabag-show-entry-after-creation nil
+  "If non-nil, show the entry after adding it."
+  :group 'wallabag
+  :type 'boolean)
+
+(defvar wallabag-search-current-page 1
+  "The number of current page in the current search result.")
+
+(defvar wallabag-search-pages 0
+  "The number of pages in the current search result.")
+
 ;;; requests
 
 (defun wallabag-request-token ()
@@ -284,9 +303,6 @@ When live editing the filter, it is bound to :live.")
                   (setq wallabag-user-created-at (assoc-default 'created_at data))
                   (setq wallabag-user-updated-at (assoc-default 'updated_at data))
                   (message "Request User Info Done."))))))
-
-(define-obsolete-function-alias #'wallabag-request-entries
-  'wallabag-request-and-synchronize-entries "wallabag 1.1.0")
 
 (defun wallabag-request-new-entries ()
   "Request new entries.
@@ -727,35 +743,36 @@ TAGS are seperated by comma."
                               (wallabag-request-token)
                               (funcall #'wallabag-add-entry url))))
       :success (cl-function
-                (lambda (&key data &allow-other-keys)
-                  ;; convert tags array to tag comma seperated string
-                  (setq data
-                        (progn
-                          (setf
-                           (alist-get 'tag data)
-                           (if (stringp (alist-get 'tag data))
-                               (alist-get 'tag data)
-                             (wallabag-convert-tags-to-tag data)))
-                          data))
-                  (let ((inhibit-read-only t)
-                        (id (alist-get 'id data)))
-                    ;; check id exists or not
-                    (if (eq 1 (caar (wallabag-db-sql
-                                     `[:select :exists
-                                       [:select id :from items :where (= id ,id)]])))
-                        (progn
-                          (message "Entry Already Exists")
-                          (goto-char (wallabag-find-candidate-location id))
-                          (wallabag-flash-show (line-beginning-position) (line-end-position) 'highlight 0.5))
-                      (wallabag-db-insert (list data))
-                      (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                          (with-current-buffer (get-buffer "*wallabag-search*")
-                            (save-excursion
-                              (goto-char (point-min))
-                              (funcall wallabag-search-print-entry-function data))) )
-                      (message "Add Entry: %s" id)
-                      (if wallabag-show-entry-after-creation
-                          (wallabag-show-entry (car (wallabag-db-select :id id))) ))))))))
+                (let ((show-entry wallabag-show-entry-after-creation))
+                  (lambda (&key data &allow-other-keys)
+                    ;; convert tags array to tag comma seperated string
+                    (setq data
+                          (progn
+                            (setf
+                             (alist-get 'tag data)
+                             (if (stringp (alist-get 'tag data))
+                                 (alist-get 'tag data)
+                               (wallabag-convert-tags-to-tag data)))
+                            data))
+                    (let ((inhibit-read-only t)
+                          (id (alist-get 'id data)))
+                      ;; check id exists or not
+                      (if (eq 1 (caar (wallabag-db-sql
+                                       `[:select :exists
+                                         [:select id :from items :where (= id ,id)]])))
+                          (progn
+                            (message "Entry Already Exists")
+                            (goto-char (wallabag-find-candidate-location id))
+                            (wallabag-flash-show (line-beginning-position) (line-end-position) 'highlight 0.5))
+                        (wallabag-db-insert (list data))
+                        (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                            (with-current-buffer (get-buffer "*wallabag-search*")
+                              (save-excursion
+                                (goto-char (point-min))
+                                (funcall wallabag-search-print-entry-function data))) )
+                        (message "Add Entry: %s" id)
+                        (if show-entry
+                            (wallabag-show-entry (car (wallabag-db-select :id id))) )))) )))))
 
 (defun wallabag-insert-entry (&optional url title content)
   "Insert a entry by URL, TITLE, and CONTENT."
@@ -786,27 +803,28 @@ TAGS are seperated by comma."
                               (wallabag-request-token)
                               (funcall #'wallabag-insert-entry url title content))))
       :success (cl-function
-                (lambda (&key data &allow-other-keys)
-                  ;; convert tags array to tag comma seperated string
-                  (setq data
-                        (progn
-                          (setf
-                           (alist-get 'tag data)
-                           (if (stringp (alist-get 'tag data))
-                               (alist-get 'tag data)
-                             (wallabag-convert-tags-to-tag data)))
-                          data))
-                  (let ((inhibit-read-only t)
-                        (id (alist-get 'id data)))
-                    (wallabag-db-insert (list data))
-                    (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                        (with-current-buffer (get-buffer "*wallabag-search*")
-                          (save-excursion
-                            (goto-char (point-min))
-                            (funcall wallabag-search-print-entry-function data))) )
-                    (message "Insert Entry: %s" id)
-                    (if wallabag-show-entry-after-creation
-                        (wallabag-show-entry (car (wallabag-db-select :id id))) )))))))
+                (let ((show-entry wallabag-show-entry-after-creation))
+                  (lambda (&key data &allow-other-keys)
+                    ;; convert tags array to tag comma seperated string
+                    (setq data
+                          (progn
+                            (setf
+                             (alist-get 'tag data)
+                             (if (stringp (alist-get 'tag data))
+                                 (alist-get 'tag data)
+                               (wallabag-convert-tags-to-tag data)))
+                            data))
+                    (let ((inhibit-read-only t)
+                          (id (alist-get 'id data)))
+                      (wallabag-db-insert (list data))
+                      (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                          (with-current-buffer (get-buffer "*wallabag-search*")
+                            (save-excursion
+                              (goto-char (point-min))
+                              (funcall wallabag-search-print-entry-function data))) )
+                      (message "Insert Entry: %s" id)
+                      (if wallabag-show-entry-after-creation
+                          (wallabag-show-entry (car (wallabag-db-select :id id))) ))) )))))
 
 (defun wallabag-delete-entry ()
   "Delete a entry at point."
@@ -815,8 +833,7 @@ TAGS are seperated by comma."
          (id (alist-get 'id entry))
          (title (alist-get 'title entry))
          (host wallabag-host)
-         (token (or wallabag-token (wallabag-request-token)))
-         (ori))
+         (token (or wallabag-token (wallabag-request-token))))
     (if (yes-or-no-p (format "Do you really want to Delete \"%s\"?" title))
         (request (format "%s/api/entries/%s.json" host id)
           :parser 'json-read
@@ -831,17 +848,18 @@ TAGS are seperated by comma."
                                   (wallabag-request-token)
                                   (funcall #'wallabag-delete-entry))))
           :success (cl-function
-                    (lambda (&key _data &allow-other-keys)
-                      (let ((inhibit-read-only t))
-                        (wallabag-db-delete id)
-                        (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                            (with-current-buffer (get-buffer "*wallabag-search*")
-                              (setq ori (point))
-                              (wallabag-search-update-buffer wallabag-search-current-page)
-                              (goto-char ori)) )
-                        (if (derived-mode-p 'wallabag-entry-mode)
-                            (kill-buffer))
-                        (message "Deletion Done"))))))))
+                    (let ((page wallabag-search-current-page))
+                      (lambda (&key _data &allow-other-keys)
+                        (let ((inhibit-read-only t))
+                          (wallabag-db-delete id)
+                          (if (buffer-live-p (get-buffer "*wallabag-search*"))
+                              (with-current-buffer (get-buffer "*wallabag-search*")
+                                (setq ori (point))
+                                (wallabag-search-update-buffer page)
+                                (goto-char ori)) )
+                          (if (derived-mode-p 'wallabag-entry-mode)
+                              (kill-buffer))
+                          (message "Deletion Done"))) ))))))
 
 
 
@@ -1810,8 +1828,6 @@ record will be shown.
             (setq wallabag-search-current-page 1)
             (wallabag-search-update-buffer)))))))
 
-(defvar wallabag-search-entries-length 0)
-
 (defun wallabag-search-update-buffer (&optional page)
   "Update the *wallabag-search* buffer by PAGE."
   (interactive)
@@ -1847,22 +1863,6 @@ record will be shown.
 (defun wallabag-search-get-filtered-entries (&optional page)
   "Get wallabag entries by PAGE."
   (wallabag-db-select :sql (wallabag-search-parse-filter wallabag-search-filter :limit wallabag-search-page-max-rows :page page)))
-
-(defcustom wallabag-search-page-max-rows 31
-  "The maximum number of entries to display in a single page."
-  :group 'wallabag
-  :type 'integer)
-
-(defcustom wallabag-show-entry-after-creation nil
-  "If non-nil, show the entry after adding it."
-  :group 'wallabag
-  :type 'boolean)
-
-(defvar wallabag-search-current-page 1
-  "The number of current page in the current search result.")
-
-(defvar wallabag-search-pages 0
-  "The number of pages in the current search result.")
 
 (defun wallabag-search-more-data (page)
   "Update data by PAGE."

@@ -46,9 +46,9 @@ Alist with elements in form (emoji . image)")
                    (goto-char (point-min))
                    (read (current-buffer)))
                  wallabag-emoji-custom-alist))
-    (setq wallabag-emoji-candidates (mapcar 'car wallabag-emoji-alist))
+    (setq wallabag-emoji-candidates (mapcar #'car wallabag-emoji-alist))
     (setq wallabag-emoji-max-length
-          (apply 'max (mapcar 'length wallabag-emoji-candidates)))))
+          (apply #'max (mapcar #'length wallabag-emoji-candidates)))))
 
 (defun wallabag-emoji-name (emoji)
   "Find EMOJI name."
@@ -74,7 +74,7 @@ ENTRY is the entry alist."
 (defun wallabag-find-candidate-at-point ()
   "Find candidate at point and return the list."
   (interactive)
-  (get-text-property (if (eq major-mode 'wallabag-entry-mode) (point-min) (point)) 'wallabag-entry))
+  (get-text-property (if (derived-mode-p 'wallabag-entry-mode) (point-min) (point)) 'wallabag-entry))
 
 (defun wallabag-find-marked-candidates ()
   "Find marked candidates and return the alist."

@@ -637,7 +637,7 @@ TAGS are seperated by comma."
                           (wallabag-search-update-buffer)
                           (goto-char ori)) )
                     (wallabag-request-tags)
-                    (if (eq major-mode 'wallabag-entry-mode)
+                    (if (derived-mode-p 'wallabag-entry-mode)
                         (wallabag-show-entry (car (wallabag-db-select :id id))))
                     (message "Add Tags Done")))))))
 
@@ -833,7 +833,7 @@ TAGS are seperated by comma."
                               (setq ori (point))
                               (wallabag-search-update-buffer wallabag-search-current-page)
                               (goto-char ori)) )
-                        (if (eq major-mode 'wallabag-entry-mode)
+                        (if (derived-mode-p 'wallabag-entry-mode)
                             (kill-buffer))
                         (message "Deletion Done"))))))))
 
@@ -1107,7 +1107,7 @@ TAGS are seperated by comma."
   (goto-char (point-min))
   (let ((wallabag-live-filteringp t))
     (wallabag-search-update-buffer wallabag-search-current-page) )
-  (unless (eq major-mode 'wallabag-search-mode)
+  (unless (derived-mode-p 'wallabag-search-mode)
     (wallabag-search-mode))
   (if (and wallabag-show-sidebar wallabag-all-tags)
       (wallabag-sidebar-create-window))
@@ -1276,7 +1276,7 @@ for other characters, they are printed as they are."
                                                                        :left) 'face 'wallabag-archive-face)
                                                         (propertize title 'face 'wallabag-title-face)))))
                                   ("content" (propertize (if (or (string-empty-p content)
-                                                                 (eq content nil))
+                                                                 (not content))
                                                              ""
                                                            (s-word-wrap (window-width (selected-window))
                                                                         (s-truncate
@@ -1314,7 +1314,7 @@ for other characters, they are printed as they are."
 (defun wallabag-quit ()
   "Quit *wallabag-entry* or *wallabag-search*."
   (interactive)
-  (when (eq major-mode 'wallabag-search-mode)
+  (when (derived-mode-p 'wallabag-search-mode)
     (cond ((get-buffer "*wallabag-entry*")
            (pop-to-buffer "*wallabag-entry*")
            (if (< (length (window-prev-buffers)) 2)
@@ -1330,7 +1330,7 @@ for other characters, they are printed as they are."
 (defun wallabag-search-quit ()
   "Quit *wallabag-search*."
   (interactive)
-  (when (eq major-mode 'wallabag-search-mode)
+  (when (derived-mode-p 'wallabag-search-mode)
     (emacsql-close (wallabag-db))
     (quit-window)
     (kill-buffer "*wallabag-search*")
@@ -1381,7 +1381,7 @@ for other characters, they are printed as they are."
 (defun wallabag-next-entry ()
   "Move to next entry."
   (interactive)
-  (if (eq major-mode 'wallabag-search-mode)
+  (if (derived-mode-p 'wallabag-search-mode)
       (if (text-property-not-all (point) (point-max) 'wallabag-entry nil)
           (let ((ori "") (new ""))
             (while (and (equal new ori) new ori)
@@ -1402,8 +1402,8 @@ for other characters, they are printed as they are."
 (defun wallabag-previous-entry ()
   "Move to previous entry."
   (interactive)
-  (if (eq major-mode 'wallabag-search-mode)
-      (if (eq (point) (point-min))
+  (if (derived-mode-p 'wallabag-search-mode)
+      (if (bobp)
           (if (eq wallabag-search-current-page 1)
               (message "This is the first entry")
             (wallabag-search-previous-page)
@@ -1497,7 +1497,7 @@ for other characters, they are printed as they are."
 (defun wallabag-show-entry (entry &optional switch)
   "Display ENTRY in the current buffer.
 Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
-  (unless (eq major-mode 'wallabag-entry-mode)
+  (unless (derived-mode-p 'wallabag-entry-mode)
       (when (get-buffer (wallabag-show--buffer-name))
         (kill-buffer (wallabag-show--buffer-name))))
   (let* ((buff (get-buffer-create (wallabag-show--buffer-name)))
@@ -1511,7 +1511,7 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
          (url (alist-get 'url entry))
          (origin-url (or (alist-get 'origin_url entry) ""))
          beg end)
-    (unless (eq major-mode 'wallabag-entry-mode)
+    (unless (derived-mode-p 'wallabag-entry-mode)
       (funcall wallabag-show-entry-switch buff)
       (when switch
         (switch-to-buffer-other-window (set-buffer (wallabag-search-buffer)))
@@ -1582,7 +1582,7 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
 (defun wallabag-entry-quit ()
   "Quit the *wallabag-entry*."
   (interactive)
-  (when (eq major-mode 'wallabag-entry-mode)
+  (when (derived-mode-p 'wallabag-entry-mode)
     (when (get-buffer "*wallabag-entry*")
       (pop-to-buffer "*wallabag-entry*")
       (if (< (length (window-prev-buffers)) 2)

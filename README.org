@@ -15,10 +15,10 @@
 * Description
 Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 #+attr_org: :width 600px
-[[file:homepage.png]]
+[[file:images/homepage.png]]
 
 #+attr_org: :width 600px
-[[file:paw.png]]
+[[file:images/paw.png]]
 
 * Features
 

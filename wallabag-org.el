@@ -163,7 +163,7 @@
 
 ;;;###autoload
 (defun wallabag-org-link-view (id _)
-  "Follow wallabag org links."
+  "Follow wallabag org links by ID."
   (let ((entry (wallabag-db-select :id (string-to-number id))))
     (if entry
         (wallabag-show-entry (car entry))
@@ -177,6 +177,7 @@
 
 
 (defun wallabag-org-protocol (data)
+  "Capture wallabag entry from org-protocol DATA."
   (let* ((id (plist-get data :id))
          (url (org-protocol-sanitize-uri (or (plist-get data :url) "")))
          (title (or (wallabag-capture-html--nbsp-to-space (string-trim (or (plist-get data :title) ""))) ""))
@@ -201,6 +202,7 @@
   (replace-regexp-in-string (rx "&nbsp;") " " s t t))
 
 (defun wallabag-org-setup-org-protocol()
+  "Setup org-protocol for wallabag."
   (require 'org-protocol)
   (add-to-list 'org-protocol-protocol-alist '("wallabag"
                                               :protocol "wallabag"
@@ -211,3 +213,5 @@
 ;; (wallabag-org-setup-org-protocol)
 
 (provide 'wallabag-org)
+
+;;; wallabag-org.el ends here

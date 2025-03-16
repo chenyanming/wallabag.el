@@ -127,10 +127,12 @@
   'wallabag-number-of-entries-to-be-synchronized "wallabag 1.1.0")
 
 (defcustom wallabag-number-of-entries-to-be-synchronized -1
-  "When runs `wallabag-request-and-synchronize-entries', first it will retrieve all new entries and insert to local database.
-Then it will call `wallabag-request-and-delete-entries' and check
-`wallabag-number-of-entries-to-be-synchronized' entries. The
-entries do not exist in server will be deleted.
+  "Number of entries to be synchronized.
+When runs `wallabag-request-and-synchronize-entries', first it will
+retrieve all new entries and insert to local database. Then it will call
+`wallabag-request-and-delete-entries' and check
+`wallabag-number-of-entries-to-be-synchronized' entries. The entries do
+not exist in server will be deleted.
 
 If -1, all entries will be checked.
 If set to N (N > 0), N entries will be checked."
@@ -197,8 +199,7 @@ When live editing the filter, it is bound to :live.")
 
 (defcustom wallabag-css-file
   (concat (file-name-directory load-file-name) "default.css")
-  "Wallabag css file for styling the entry when calls
-`wallabag-browse-with-external-browser.'"
+  "Wallabag css file for styling the entry when calls `wallabag-browse-with-external-browser.'."
   :group 'wallabag
   :type 'file)
 
@@ -286,10 +287,11 @@ When live editing the filter, it is bound to :live.")
   'wallabag-request-and-synchronize-entries "wallabag 1.1.0")
 
 (defun wallabag-request-new-entries ()
-  "Request one dummy entry from server and compare with latest one entry in database if it has new entries or not.
-If new entries are found, retrive the new entries and update the
-database, and delete the latest entires if they have been deleted
-in server."
+  "Request new entries.
+Request one dummy entry from server and compare with latest one entry in
+database if it has new entries or not. If new entries are found, retrive
+the new entries and update the database, and delete the latest entires
+if they have been deleted in server."
   (interactive)
   (setq wallabag-retrieving-p "Updating...")
   (let ((host wallabag-host)
@@ -456,8 +458,12 @@ non-nil integer PAGE retrieval starts at this page."
                       (wallabag-request-and-insert-entries number-of-retrieved 'wallabag-request-and-delete-entries total)))))))))
 
 (defun wallabag-request-and-delete-entries (perpage)
-  "Request and check `wallabag-number-of-entries-to-be-synchronized' entries, entries that do not exist in the server will be deleted.
-Please notice: this function should be called only when no new entires in the server!"
+  "Request and delete entries.
+Request and check `wallabag-number-of-entries-to-be-synchronized'
+entries, entries that do not exist in the server will be deleted. Please
+notice: this function should be called only when no new entires in the
+server!
+Argument PERPAGE Per Page."
   (setq wallabag-retrieving-p "Verifing...") ; indicate it is retrieving.
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
@@ -532,7 +538,7 @@ Please notice: this function should be called only when no new entires in the se
                   (setq wallabag-retrieving-p nil))))))
 
 (defun wallabag-request-format (&optional format)
-  "TODO: Request the format to be exported."
+  "TODO: Request the FORMAT to be exported."
   (interactive)
   (let* ((entry (wallabag-find-candidate-at-point))
          (id (alist-get 'id entry))
@@ -562,7 +568,8 @@ Please notice: this function should be called only when no new entires in the se
 
 
 (defun wallabag-request-tags (&optional callback)
-  "Request all tags."
+  "Request all tags.
+Optional argument CALLBACK request callback."
   (interactive)
   (let* ((host wallabag-host)
          (token (or wallabag-token (wallabag-request-token))))
@@ -833,6 +840,7 @@ TAGS are seperated by comma."
 
 
 (defmacro wallabag-update-entry (field int-or-str)
+  "The macro to update FIELD of wallabag, INT-OR-STR."
   `(defun ,(intern (format "wallabag-update-entry-%s" field)) (new)
      ,(format "Set %s." field)
      (interactive (list (if ,int-or-str
@@ -917,9 +925,11 @@ TAGS are seperated by comma."
 
 
 (defun wallabag-parse-json (json)
+  "Parse requested JSON."
   (alist-get 'items (assoc '_embedded json)))
 
 (defun wallabag-get-total (json)
+  "Get total field from the JSON."
   (cdr (assoc 'total json)))
 
 (defvar wallabag-find-history nil)
@@ -1484,7 +1494,7 @@ for other characters, they are printed as they are."
   "Return the appropriate buffer name for wallabag entry."
   "*wallabag-entry*")
 
-(defun wallabag-show-entry (entry &optional switch html)
+(defun wallabag-show-entry (entry &optional switch)
   "Display ENTRY in the current buffer.
 Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
   (unless (eq major-mode 'wallabag-entry-mode)
@@ -1497,7 +1507,7 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
          (created-at (alist-get 'created_at entry))
          (tag (alist-get 'tag entry))
          (domain-name (or (alist-get 'domain_name entry) ""))
-         (content (or html (alist-get 'content entry) ""))
+         (content (or (alist-get 'content entry) ""))
          (url (alist-get 'url entry))
          (origin-url (or (alist-get 'origin_url entry) ""))
          beg end)
@@ -1555,13 +1565,13 @@ Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
         (goto-char (point-min))))))
 
 (defun wallabag-render-html (begin end)
-  "Render HTML in current buffer with shr."
+  "Render HTML between BEGIN and END with shr."
   (run-hooks 'wallabag-pre-html-render-hook)
   (shr-render-region begin end)
   (run-hooks 'wallabag-post-html-render-hook))
 
 (defun wallabag-render-content (content)
-  "Render content with shr."
+  "Render CONTENT with shr."
   (with-temp-buffer
     (insert content)
     (let ((shr-use-fonts nil))
@@ -1697,6 +1707,7 @@ Defaults to current directory."
     (select-window (get-buffer-window wallabag-sidebar-buffer))))
 
 (defun wallabag-sidebar-refresh ()
+  "Refresh sidebar."
    (with-current-buffer wallabag-sidebar-buffer
     (with-silent-modifications
       (setq header-line-format (list :propertize "Groups" 'face 'bold))
@@ -1713,6 +1724,7 @@ Defaults to current directory."
     (goto-char (point-min))))
 
 (defun wallabag-sidebar-quit ()
+  "Quit sidebar."
   (interactive)
   (if (window-live-p (get-buffer-window wallabag-sidebar-buffer))
       (delete-window (get-buffer-window wallabag-sidebar-buffer))))
@@ -1795,8 +1807,7 @@ record will be shown.
 (defvar wallabag-search-entries-length 0)
 
 (defun wallabag-search-update-buffer (&optional page)
-  "Update the *wallabag-search* buffer listing to match the database.
-When FORCE is non-nil, redraw even when the database hasn't changed."
+  "Update the *wallabag-search* buffer by PAGE."
   (interactive)
   (with-current-buffer (wallabag-search-buffer)
     (let* ((inhibit-read-only t)
@@ -1849,6 +1860,7 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
 
 
 (defun wallabag-search-more-data (page)
+  "Update data by PAGE."
   (let ((inhibit-read-only t))
     (setq wallabag-search-current-page page)
     (beginning-of-line)
@@ -1857,6 +1869,7 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
 
 
 (defun wallabag-search-next-page ()
+  "Show next page."
   (interactive)
   (if (< wallabag-search-current-page wallabag-search-pages)
       (progn
@@ -1865,6 +1878,7 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
     (message "Last page.")))
 
 (defun wallabag-search-previous-page ()
+  "Show previous page."
   (interactive)
   (if (> wallabag-search-current-page 1)
       (progn
@@ -1874,7 +1888,8 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
 
 
 (defun wallabag-search-parse-filter (filter &rest properties)
-  "Parse the elements of a search FILTER into an emacsql."
+  "Parse the elements of a search FILTER into an emacsql.
+Optional argument PROPERTIES The options to chosse different sql codes."
   (let ((words (split-string filter " "))
         (id (plist-get properties :id))
         (limit (plist-get properties :limit))
@@ -1963,3 +1978,5 @@ When FORCE is non-nil, redraw even when the database hasn't changed."
         (wallabag-search-update-and-clear-filter))))
 
 (provide 'wallabag)
+
+;;; wallabag.el ends here

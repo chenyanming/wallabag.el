@@ -56,7 +56,8 @@ Alist with elements in form (emoji . image)")
   (car (cl-find emoji wallabag-emoji-alist :test 'string= :key 'cdr)))
 
 (defun wallabag-convert-tags-to-tag (entry)
-  "Convert the tags array to tag strings, seperated by comma."
+  "Convert the tags array to tag strings, seperated by comma.
+ENTRY is the entry alist."
   (mapconcat
    #'identity
    (mapcar
@@ -123,14 +124,16 @@ DELAY the flash delay"
 ;;; format
 (defun wallabag-format-column (string width &optional align)
   "Return STRING truncated or padded to WIDTH following ALIGNment.
-Align should be a keyword :left or :right."
+ALIGN should be a keyword :left or :right."
   (if (<= width 0)
       ""
     (format (format "%%%s%d.%ds" (if (eq align :left) "-" "") width width)
             string)))
 
 (defun wallabag-clamp (min value max)
-  "Clamp a value between two values."
+  "Clamp a VALUE between MIN and MAX."
   (min max (max min value)))
 
 (provide 'wallabag-util)
+
+;;; wallabag-util.el ends here

@@ -99,6 +99,7 @@
   wallabag-db-connection)
 
 (defun wallabag-db-maybe-update (db version)
+  "Update the database schema if necessary by providing DB and VERSION."
   (if (emacsql-live-p db)
       (cond ((eq version 1)
              (wallabag-db-set-version db (setq version 1))
@@ -111,10 +112,11 @@
   version)
 
 (defun wallabag-db-get-version (db)
+  "Get user-version from DB table."
   (caar (emacsql db [:select user-version :from version])))
 
 (defun wallabag-db-set-version (db dbv)
-  "Insert user-version if not exists."
+  "Insert version DBV if not exists from DB."
   (cl-assert (integerp dbv))
   (if (wallabag-db-get-version db)
       (emacsql db `[:update version :set  (= user-version ,dbv)])
@@ -122,6 +124,7 @@
 
 
 (defun wallabag-db-sql (sql &rest args)
+  "Execute SQL with ARGS."
   (if (stringp sql)
       (emacsql (wallabag-db) (apply #'format sql args))
     (apply #'emacsql (wallabag-db) sql args)))
@@ -130,6 +133,7 @@
 
 ;; select
 (defun wallabag-db-select (&rest properties)
+  "Select entries from wallabag database with PROPERTIES."
   (let ((candidates)
         (sql (plist-get properties :sql))
         (id (plist-get properties :id))
@@ -187,6 +191,7 @@
 
 ;; insert
 (defun wallabag-db-insert (entries)
+  "Insert ENTRIES into wallabag database."
   (let ((entries
          (cl-loop for entry in entries collect
                   (cl-map 'array #'identity (mapcar 'cdr entry)))))
@@ -194,6 +199,7 @@
                        :values ,entries])))
 ;; delete
 (defun wallabag-db-delete (ids)
+  "Delete entries with IDS from wallabag database."
   (cond ((vectorp ids)
          (wallabag-db-sql `[:delete :from items
                             :where (in id ,ids)]) )
@@ -203,6 +209,7 @@
 
 ;; update
 (defmacro wallabag-db-update (field)
+  "Update FIELD in wallabag database."
   `(defun ,(intern (format "wallabag-db-update-%s" field)) (id new)
      (wallabag-db-sql (vector ':update 'items
                               ':set (list '= ',(intern field) (vector new ))
@@ -217,3 +224,7 @@
 (wallabag-db-update "origin_url")
 
 (provide 'wallabag-db)
+
+(provide 'wallabag-db)
+
+;;; wallabag-db.el ends here

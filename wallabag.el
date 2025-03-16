@@ -199,7 +199,7 @@ When live editing the filter, it is bound to :live.")
 
 (defcustom wallabag-css-file
   (concat (file-name-directory load-file-name) "default.css")
-  "Wallabag css file for styling the entry when calls `wallabag-browse-with-external-browser.'."
+  "Wallabag css file when call `wallabag-browse-with-external-browser'."
   :group 'wallabag
   :type 'file)
 
@@ -298,7 +298,8 @@ if they have been deleted in server."
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
-        (page 1))
+        (page 1)
+        entries)
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -347,7 +348,8 @@ non-nil integer PAGE retrieval starts at this page."
            (perpage (min num-entries 30))
            (page (or page 1))
            current
-           position)
+           position
+           entries)
       (request (format "%s/api/entries.json" host)
         :parser 'buffer-string
         :params `(("sort" . ,sort)
@@ -415,14 +417,17 @@ non-nil integer PAGE retrieval starts at this page."
 (defun wallabag-request-and-synchronize-entries ()
   "Request and synchronize wallabag server.
 1. Request the new entries and insert to local database.
-2. Verify `wallabag-number-of-entries-to-be-synchronized' entries, entries do not exist in server will be deleted."
+2. Verify `wallabag-number-of-entries-to-be-synchronized' entries,
+entries do not exist in server will be deleted."
   (interactive)
   (setq wallabag-retrieving-p "Updating...")
   (let ((host wallabag-host)
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
-        (page 1))
+        (page 1)
+        entries
+        total)
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -471,7 +476,8 @@ Argument PERPAGE Per Page."
         (order "desc")
         (page 1)
         current
-        position)
+        position
+        entries)
     (request (format "%s/api/entries.json" host)
       :parser 'buffer-string
       :params `(("sort" . ,sort)
@@ -520,7 +526,7 @@ Argument PERPAGE Per Page."
                       (message "Finished synchronization. Deleted %s articles." number-to-be-deleted) )
                      ((= number-to-be-deleted 0)
                       (message "Finished synchronization."))
-                     (t (error "Synchronization error: number-to-be-deleted is %s", number-to-be-deleted))))
+                     (t (error "Synchronization error: number-to-be-deleted is %s" number-to-be-deleted))))
                   (with-silent-modifications
                     (wallabag-request-tags)
                     (if (buffer-live-p (get-buffer "*wallabag-search*"))
@@ -608,8 +614,6 @@ TAGS are seperated by comma."
          (id (alist-get 'id entry))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token)))
-         (beg (line-beginning-position))
-         (end (1+ (line-end-position)))
          ori)
     (request (format "%s/api/entries/%s/tags.json" host id)
       :parser 'json-read
@@ -659,8 +663,6 @@ TAGS are seperated by comma."
                 (completing-read
                  "Selete the tag you want to delete: "
                  (mapcar #'cdr tag-list)) tag-list :test 'string= :key 'cdr)))
-         (beg (line-beginning-position))
-         (end (1+ (line-end-position)))
          ori)
     (request (format "%s/api/entries/%s/tags/%s.json" host id tag)
       :type "DELETE"
@@ -694,11 +696,11 @@ TAGS are seperated by comma."
   (interactive)
   (let* ((url (pcase major-mode
                 ('elfeed-show-mode
-                 (if elfeed-show-entry (elfeed-entry-link elfeed-show-entry) "" ))
+                 (if (boundp 'elfeed-show-entry) (elfeed-entry-link elfeed-show-entry) ""))
                 ('eaf-mode
-                 (abbreviate-file-name eaf--buffer-url))
+                 (if (boundp 'eaf--buffer-url) (abbreviate-file-name eaf--buffer-url) ""))
                 ('eww-mode
-                 (plist-get eww-data :url))
+                 (if (boundp 'eww-data) (plist-get eww-data :url) ""))
                 (_ (if url url (read-from-minibuffer "What URL do you want to add? ")))))
          ;; FIXME if no tags pull before, it will return empty string
          (tags (wallabag-get-tag-name))

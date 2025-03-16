@@ -27,8 +27,9 @@
 (require 'wallabag-db)
 (require 'org-protocol)
 
-(declare-function wallabag-show-entry "calibredb.el")
-(declare-function wallabag-insert-entry "calibredb.el")
+(declare-function wallabag-show-entry "wallabag.el")
+(declare-function wallabag-add-entry "wallabag.el")
+(declare-function wallabag-insert-entry "wallabag.el")
 
 (defun wallabag-org-link-copy ()
   "Copy the marked items as wallabag org links."
@@ -190,11 +191,15 @@
       (if (and (boundp 'paw-server-html-file)
                (file-exists-p paw-server-html-file))
           (progn
-            (wallabag-insert-entry url title (with-temp-buffer
-                                               (insert-file-contents paw-server-html-file)
-                                               (buffer-string)))
+            (if (string-empty-p content)
+                (wallabag-insert-entry url title (with-temp-buffer
+                                                   (insert-file-contents paw-server-html-file)
+                                                   (buffer-string)))
+              ;; if the content is not empty, we insert the content directly
+              (wallabag-insert-entry url title content))
             (delete-file paw-server-html-file))
-        (wallabag-insert-entry url title content)))
+        ;; if no `paw-server-html-file' exists, we use the url to fetch the content, and content is empty
+        (wallabag-add-entry url)))
     nil))
 
 (defun wallabag-org-capture-html--nbsp-to-space (s)

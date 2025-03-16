@@ -7,7 +7,7 @@
 ;; Keywords: tools
 ;; Created: 13 April 2021
 ;; Version: 1.1.0
-;; Package-Requires: ((emacs "25.1") (request "0.3.3") (emacsql "3.0.0"))
+;; Package-Requires: ((emacs "27.1") (request "0.3.3") (emacsql "3.0.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -1663,10 +1663,8 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
 (define-derived-mode wallabag-sidebar-mode
   special-mode "Wallabag Sidebar"
   "Major mode for working with `wallabag' projects."
-  (face-remap-add-relative 'default 'wallabag-sidebar-face)
   ;; (add-hook 'post-command-hook #'wallabag-sidebar-sync-notes t t)
-
-  )
+  (face-remap-add-relative 'default 'wallabag-sidebar-face))
 
 (defun wallabag-sidebar-create-buffer ()
   "Return wallabag sidebar buffer for DIRECTORY."

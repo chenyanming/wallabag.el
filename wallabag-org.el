@@ -180,8 +180,8 @@
   "Capture wallabag entry from org-protocol DATA."
   (let* ((id (plist-get data :id))
          (url (org-protocol-sanitize-uri (or (plist-get data :url) "")))
-         (title (or (wallabag-capture-html--nbsp-to-space (string-trim (or (plist-get data :title) ""))) ""))
-         (content (or (wallabag-capture-html--nbsp-to-space (string-trim (or (plist-get data :body) ""))) "")))
+         (title (or (wallabag-org-capture-html--nbsp-to-space (string-trim (or (plist-get data :title) ""))) ""))
+         (content (or (wallabag-org-capture-html--nbsp-to-space (string-trim (or (plist-get data :body) ""))) "")))
     (if id
         (wallabag-show-entry (car (wallabag-db-select :id (string-to-number id))))
       ;; if we `paw-server-html-file' exists, we use it to insert the entry
@@ -195,7 +195,7 @@
         (wallabag-insert-entry url title content)))
     nil))
 
-(defun wallabag-capture-html--nbsp-to-space (s)
+(defun wallabag-org-capture-html--nbsp-to-space (s)
   "Convert HTML non-breaking spaces to plain spaces in S."
   ;; Not sure why sometimes these are in the HTML and Pandoc converts
   ;; them to underlines instead of spaces, but this fixes it.

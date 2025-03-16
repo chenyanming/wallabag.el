@@ -1850,15 +1850,19 @@ record will be shown.
   :group 'wallabag
   :type 'integer)
 
-(eval-when-compile
-  (defcustom wallabag-show-entry-after-creation nil
-    "If non-nil, show the entry after adding it."
-    :group 'wallabag
-    :type 'boolean))
+(defcustom wallabag-show-entry-after-creation nil
+  "If non-nil, show the entry after adding it."
+  :group 'wallabag
+  :type 'boolean)
 
 (eval-when-compile
-  (defvar wallabag-search-current-page 1
-    "The number of current page in the current search result."))
+  (defvar wallabag-show-entry-after-creation))
+
+(defvar wallabag-search-current-page 1
+  "The number of current page in the current search result.")
+
+(eval-when-compile
+  (defvar wallabag-search-current-page))
 
 (defvar wallabag-search-pages 0
   "The number of pages in the current search result.")

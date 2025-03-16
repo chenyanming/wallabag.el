@@ -743,8 +743,7 @@ TAGS are seperated by comma."
                               (wallabag-request-token)
                               (funcall #'wallabag-add-entry url))))
       :success (cl-function
-                (let ((show-entry wallabag-show-entry-after-creation))
-                  (lambda (&key data &allow-other-keys)
+                (lambda (&key data &allow-other-keys)
                     ;; convert tags array to tag comma seperated string
                     (setq data
                           (progn
@@ -772,7 +771,7 @@ TAGS are seperated by comma."
                                 (funcall wallabag-search-print-entry-function data))) )
                         (message "Add Entry: %s" id)
                         (if show-entry
-                            (wallabag-show-entry (car (wallabag-db-select :id id))) )))) )))))
+                            (wallabag-show-entry (car (wallabag-db-select :id id))) ))))))))
 
 (defun wallabag-insert-entry (&optional url title content)
   "Insert a entry by URL, TITLE, and CONTENT."
@@ -803,8 +802,7 @@ TAGS are seperated by comma."
                               (wallabag-request-token)
                               (funcall #'wallabag-insert-entry url title content))))
       :success (cl-function
-                (let ((show-entry wallabag-show-entry-after-creation))
-                  (lambda (&key data &allow-other-keys)
+                (lambda (&key data &allow-other-keys)
                     ;; convert tags array to tag comma seperated string
                     (setq data
                           (progn
@@ -824,7 +822,7 @@ TAGS are seperated by comma."
                               (funcall wallabag-search-print-entry-function data))) )
                       (message "Insert Entry: %s" id)
                       (if wallabag-show-entry-after-creation
-                          (wallabag-show-entry (car (wallabag-db-select :id id))) ))) )))))
+                          (wallabag-show-entry (car (wallabag-db-select :id id))) )))))))
 
 (defun wallabag-delete-entry ()
   "Delete a entry at point."

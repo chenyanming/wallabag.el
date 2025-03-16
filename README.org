@@ -124,8 +124,8 @@ Wallabag will not download the images, but using Emacs [[https://www.gnu.org/sof
 
 
 * Use org-protocol to save page
-- If [[https://www.piwheels.org/project/emacs-paw/][paw-server]] is running, use [[file:wallabag_insert_entry.js]] (send html to paw-server, and save the page to wallabag)
-- If [[https://www.piwheels.org/project/emacs-paw/][paw-server]] is not running use [[file:wallabag_add_entry.js]] (only send url to wallabag server)
+- If [[https://www.piwheels.org/project/emacs-paw/][paw-server]] is running, use [[file:js/wallabag_insert_entry.js]] (send html to paw-server, and save the page to wallabag)
+- If [[https://www.piwheels.org/project/emacs-paw/][paw-server]] is not running use [[file:js/wallabag_add_entry.js]] (only send url to wallabag server)
 
 
 * Keybindings

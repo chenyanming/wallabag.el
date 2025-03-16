@@ -1,43 +1,10 @@
 ;;; wallabag-db.el --- Emacs wallabag client db realted operations -*- lexical-binding: t; -*-
 
 (require 'emacsql)
+;; REVIEW: is this require needed?
+;; emacsql-sqlite provides a common interface to an emacsql SQLite backend (e.g. emacs-sqlite-builtin)
+;; not to be confused with a backend itself named emacsql-sqlite that existed in emacsql < 4.0.
 (require 'emacsql-sqlite)
-
-(defcustom wallabag-db-connector (if (and (progn
-                                            (require 'emacsql-sqlite-builtin nil t)
-                                            (functionp 'emacsql-sqlite-builtin))
-                                          (functionp 'sqlite-open))
-                                     'sqlite-builtin
-                                   'sqlite)
-  "The database connector used by wallabag.
-This must be set before `wallabag' is loaded.  To use an alternative
-connector you must install the respective package explicitly.
-The default is `sqlite', which uses the `emacsql-sqlite' library
-that is being maintained in the same repository as `emacsql'
-itself.
-If you are using Emacs 29, then the recommended connector is
-`sqlite-builtin', which uses the new builtin support for SQLite.
-You need to install the `emacsql-sqlite-builtin' package to use
-this connector.
-If you are using an older Emacs release, then the recommended
-connector is `sqlite-module', which uses the module provided by
-the `sqlite3' package.  This is very similar to the previous
-connector and the built-in support in Emacs 29 derives from this
-module.  You need to install the `emacsql-sqlite-module' package
-to use this connector.
-For the time being `libsqlite3' is still supported.  Do not use
-this, it is an older version of the `sqlite-module' connector
-from before the connector and the package were renamed.
-For the time being `sqlite3' is also supported.  Do not use this.
-This uses the third-party `emacsql-sqlite3' package, which uses
-the official `sqlite3' cli tool, which is not intended
-to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
-  :group 'wallabag
-  :type '(choice (const sqlite)
-          (const sqlite-builtin)
-          (const sqlite-module)
-          (const :tag "libsqlite3 (OBSOLETE)" libsqlite3)
-          (const :tag "sqlite3 (BROKEN)" sqlite3)))
 
 (defcustom wallabag-db-file
   (expand-file-name (concat user-emacs-directory ".cache/wallabag.sqlite"))
@@ -52,36 +19,12 @@ to be used like this.  See https://nullprogram.com/blog/2014/02/06/."
 
 (defvar wallabag-db-newp nil)
 
-(defun wallabag-db--conn-fn ()
-  "Return the function for creating the database connection."
-  (cl-case wallabag-db-connector
-    (sqlite
-     (progn
-       (require 'emacsql-sqlite)
-       #'emacsql-sqlite))
-    (sqlite-builtin
-     (progn
-       (require 'emacsql-sqlite-builtin)
-       #'emacsql-sqlite-builtin))
-    (sqlite-module
-     (progn
-       (require 'emacsql-sqlite-module)
-       #'emacsql-sqlite-module))
-    (libsqlite3
-     (progn
-       (require 'emacsql-libsqlite3)
-       #'emacsql-libsqlite3))
-    (sqlite3
-     (progn
-       (require 'emacsql-sqlite3)
-       #'emacsql-sqlite3))))
-
 (defun wallabag-db ()
   "Connect or create database."
   (unless (and wallabag-db-connection (emacsql-live-p wallabag-db-connection))
     (unless (file-exists-p (concat user-emacs-directory ".cache/"))
       (make-directory (concat user-emacs-directory ".cache/")))
-    (setq wallabag-db-connection (funcall (wallabag-db--conn-fn) wallabag-db-file))
+    (setq wallabag-db-connection (emacsql-sqlite-open wallabag-db-file))
 
     ;; create items table
     (emacsql wallabag-db-connection [:create-table :if-not-exists items ([tag

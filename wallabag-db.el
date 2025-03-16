@@ -194,7 +194,7 @@
   "Insert ENTRIES into wallabag database."
   (let ((entries
          (cl-loop for entry in entries collect
-                  (cl-map 'array #'identity (mapcar 'cdr entry)))))
+                  (cl-map 'array #'identity (mapcar #'cdr entry)))))
     (wallabag-db-sql `[:insert :or :ignore :into items
                        :values ,entries])))
 ;; delete

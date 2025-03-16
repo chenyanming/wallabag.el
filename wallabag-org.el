@@ -25,8 +25,10 @@
 (require 'ol)
 (require 'wallabag-util)
 (require 'wallabag-db)
+(require 'org-protocol)
 
 (declare-function wallabag-show-entry "calibredb.el")
+(declare-function wallabag-insert-entry "calibredb.el")
 
 (defun wallabag-org-link-copy ()
   "Copy the marked items as wallabag org links."
@@ -203,7 +205,6 @@
 
 (defun wallabag-org-setup-org-protocol()
   "Setup org-protocol for wallabag."
-  (require 'org-protocol)
   (add-to-list 'org-protocol-protocol-alist '("wallabag"
                                               :protocol "wallabag"
                                               :function wallabag-org-protocol

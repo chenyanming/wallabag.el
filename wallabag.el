@@ -169,6 +169,7 @@ should change it to contain the rendered version of it."
 
 (defcustom wallabag-browser-function 'browse-url
   "Browser function used when opening wallabag entry."
+  :group 'wallabag
   :type browse-url--browser-defcustom-type)
 
 (defvar wallabag-search-filter-active nil
@@ -203,17 +204,18 @@ When live editing the filter, it is bound to :live.")
   :group 'wallabag
   :type 'file)
 
-(defconst wallabag-field-mapping '(("title" . "title")
-                                   ("tags" . "tags")
-                                   ("archive" . "is_archived")
-                                   ("starred" . "is_starred")
-                                   ("content" . "content")
-                                   ("language" . "language")
-                                   ("preview_picture" . "preview_picture")
-                                   ("published_at" . "published_at")
-                                   ("authors" . "published_by")
-                                   ("public" . "is_public")
-                                   ("origin_url" . "origin_url")))
+(eval-when-compile
+  (defconst wallabag-field-mapping '(("title" . "title")
+                                     ("tags" . "tags")
+                                     ("archive" . "is_archived")
+                                     ("starred" . "is_starred")
+                                     ("content" . "content")
+                                     ("language" . "language")
+                                     ("preview_picture" . "preview_picture")
+                                     ("published_at" . "published_at")
+                                     ("authors" . "published_by")
+                                     ("public" . "is_public")
+                                     ("origin_url" . "origin_url"))))
 ;;; requests
 
 (defun wallabag-request-token ()
@@ -251,7 +253,7 @@ When live editing the filter, it is bound to :live.")
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-request-server-info))))
+                              (funcall #'wallabag-request-server-info))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq wallabag-appname (assoc-default 'appname data))
@@ -274,7 +276,7 @@ When live editing the filter, it is bound to :live.")
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-request-user-info))))
+                              (funcall #'wallabag-request-user-info))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq wallabag-user-id (assoc-default 'id data))
@@ -315,7 +317,7 @@ if they have been deleted in server."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-request-new-entries))))
+                              (funcall #'wallabag-request-new-entries))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
@@ -366,7 +368,7 @@ non-nil integer PAGE retrieval starts at this page."
         :status-code '((401 . (lambda (&rest _)
                                 (message "Authenticating...")
                                 (wallabag-request-token)
-                                (funcall 'wallabag-request-and-insert-entries num-entries callback args page))))
+                                (funcall #'wallabag-request-and-insert-entries num-entries callback args page))))
         :success (cl-function
                   (lambda (&key data &allow-other-keys)
                     ;; save the original string
@@ -443,7 +445,7 @@ entries do not exist in server will be deleted."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-request-and-synchronize-entries))))
+                              (funcall #'wallabag-request-and-synchronize-entries))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
@@ -495,7 +497,7 @@ Argument PERPAGE Per Page."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-request-and-delete-entries perpage))))
+                              (funcall #'wallabag-request-and-delete-entries perpage))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; save the original string
@@ -560,7 +562,7 @@ Argument PERPAGE Per Page."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-request-format format))))
+                              (funcall #'wallabag-request-format format))))
       :success (cl-function
                 (lambda (&key response &allow-other-keys)
                   (message "Done: %s" (request-response-header response "content-type"))
@@ -589,7 +591,7 @@ Optional argument CALLBACK request callback."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-request-tags callback))))
+                              (funcall #'wallabag-request-tags callback))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let ((tag-list (mapcar
@@ -627,7 +629,7 @@ TAGS are seperated by comma."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-add-tags tags))))
+                              (funcall #'wallabag-add-tags tags))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let* ((inhibit-read-only t)
@@ -675,7 +677,7 @@ TAGS are seperated by comma."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-remove-tag))))
+                              (funcall #'wallabag-remove-tag))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let* ((inhibit-read-only t)
@@ -721,7 +723,7 @@ TAGS are seperated by comma."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-add-entry url))))
+                              (funcall #'wallabag-add-entry url))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; convert tags array to tag comma seperated string
@@ -780,7 +782,7 @@ TAGS are seperated by comma."
       :status-code '((401 . (lambda (&rest _)
                               (message "Authenticating...")
                               (wallabag-request-token)
-                              (funcall 'wallabag-insert-entry url title content))))
+                              (funcall #'wallabag-insert-entry url title content))))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; convert tags array to tag comma seperated string
@@ -825,7 +827,7 @@ TAGS are seperated by comma."
           :status-code '((401 . (lambda (&rest _)
                                   (message "Authenticating...")
                                   (wallabag-request-token)
-                                  (funcall 'wallabag-delete-entry))))
+                                  (funcall #'wallabag-delete-entry))))
           :success (cl-function
                     (lambda (&key _data &allow-other-keys)
                       (let ((inhibit-read-only t))
@@ -869,7 +871,7 @@ TAGS are seperated by comma."
           :status-code '((401 . (lambda (&rest _)
                                   (message "Authenticating...")
                                   (wallabag-request-token)
-                                  (funcall ',(intern (format "wallabag-update-entry-%s" field)) new))))
+                                  (funcall #',(intern (format "wallabag-update-entry-%s" field)) new))))
           :success (cl-function
                     (lambda (&key data &allow-other-keys)
                       (let* ((inhibit-read-only t)
@@ -1847,13 +1849,15 @@ record will be shown.
   :group 'wallabag
   :type 'integer)
 
-(defcustom wallabag-show-entry-after-creation nil
-  "If non-nil, show the entry after adding it."
-  :group 'wallabag
-  :type 'boolean)
+(eval-when-compile
+  (defcustom wallabag-show-entry-after-creation nil
+    "If non-nil, show the entry after adding it."
+    :group 'wallabag
+    :type 'boolean))
 
-(defvar wallabag-search-current-page 1
-  "The number of current page in the current search result.")
+(eval-when-compile
+  (defvar wallabag-search-current-page 1
+    "The number of current page in the current search result."))
 
 (defvar wallabag-search-pages 0
   "The number of pages in the current search result.")

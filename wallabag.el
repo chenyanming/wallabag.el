@@ -285,7 +285,7 @@ When live editing the filter, it is bound to :live.")
                   (setq wallabag-user-updated-at (assoc-default 'updated_at data))
                   (message "Request User Info Done."))))))
 
-(define-obsolete-function-alias 'wallabag-request-entries
+(define-obsolete-function-alias #'wallabag-request-entries
   'wallabag-request-and-synchronize-entries "wallabag 1.1.0")
 
 (defun wallabag-request-new-entries ()
@@ -698,7 +698,9 @@ TAGS are seperated by comma."
   (interactive)
   (let* ((url (pcase major-mode
                 ('elfeed-show-mode
-                 (if (boundp 'elfeed-show-entry) (elfeed-entry-link elfeed-show-entry) ""))
+                 (if (and (boundp 'elfeed-show-entry)
+                          (fboundp 'elfeed-entry-link))
+                     (elfeed-entry-link elfeed-show-entry) ""))
                 ('eaf-mode
                  (if (boundp 'eaf--buffer-url) (abbreviate-file-name eaf--buffer-url) ""))
                 ('eww-mode
@@ -947,8 +949,9 @@ TAGS are seperated by comma."
               :dynamic-collection t
               :sort nil
               :action (lambda (cand)
-                        (with-ivy-window
-                         (wallabag-show-entry (get-text-property 0 'wallabag-entry cand))))
+                        (if (fboundp 'with-ivy-window)
+                            (with-ivy-window
+                             (wallabag-show-entry (get-text-property 0 'wallabag-entry cand))) ))
               :caller 'wallagab-find))
    ((fboundp 'consult--read)
     (consult--read (nreverse (mapcar (lambda(x)
@@ -972,7 +975,7 @@ TAGS are seperated by comma."
                    :sort nil
                    :history 'wallabag-find-history
                    :prompt "Wallabag: "
-                   :lookup (lambda(cand candidates input-string _)
+                   :lookup (lambda(cand candidates _ _)
                              (when (string-match "⇰\s\\(.+\\)$" cand)
                                (wallabag-show-entry (car (wallabag-db-select :id (nth 1 (assoc cand candidates)))))))))
    (t (message "`wallabag-find' only supportes ivy and consult."))))
@@ -1092,7 +1095,7 @@ TAGS are seperated by comma."
   (require 'hl-line)
   (set (make-local-variable 'hl-line-face) 'wallabag-current-match)
   (hl-line-mode)
-  (add-hook 'minibuffer-setup-hook 'wallabag-search-minibuffer-setup))
+  (add-hook 'minibuffer-setup-hook #'wallabag-search-minibuffer-setup))
 
 (defun wallabag-search-buffer ()
   "Create buffer *wallabag-search*."
@@ -1450,13 +1453,13 @@ for other characters, they are printed as they are."
 (defun wallabag-search-update-and-clear-filter ()
   "Request new entries, clear the filter keyword, and update *wallabag-search*."
   (interactive)
-  (call-interactively 'wallabag-request-new-entries)
+  (call-interactively #'wallabag-request-new-entries)
   (message "Retriving new articles from wallabag host %s ..." wallabag-host))
 
 (defun wallabag-search-synchronize-and-clear-filter ()
   "Synchronize entries, clear the filter keyword, and update *wallabag-search*."
   (interactive)
-  (call-interactively 'wallabag-request-and-synchronize-entries)
+  (call-interactively #'wallabag-request-and-synchronize-entries)
   (message "Synchronizing articles from wallabag host %s ..." wallabag-host))
 
 ;;; wallabag-entry-mode
@@ -1793,7 +1796,7 @@ record will be shown.
   "Set up the minibuffer for live filtering."
   (when wallabag-search-filter-active
     (when (eq :live wallabag-search-filter-active)
-      (add-hook 'post-command-hook 'wallabag-search-update-buffer-with-minibuffer-contents nil :local))))
+      (add-hook 'post-command-hook #'wallabag-search-update-buffer-with-minibuffer-contents nil :local))))
 
 (defun wallabag-search-update-buffer-with-minibuffer-contents ()
   "Update the *wallabag-search* buffer based on the contents of the minibuffer."
@@ -1867,6 +1870,9 @@ record will be shown.
 (defvar wallabag-search-pages 0
   "The number of pages in the current search result.")
 
+(eval-when-compile
+  (defvar wallabag-search-pages))
+
 
 (defun wallabag-search-more-data (page)
   "Update data by PAGE."
@@ -1902,7 +1908,6 @@ Optional argument PROPERTIES The options to chosse different sql codes."
   (let ((words (split-string filter " "))
         (id (plist-get properties :id))
         (limit (plist-get properties :limit))
-        (count (plist-get properties :count))
         (page (plist-get properties :page)))
     (cond
      (wallabag-group-filteringp (apply #'vector

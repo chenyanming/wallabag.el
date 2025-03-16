@@ -857,8 +857,7 @@ TAGS are seperated by comma."
          (id (alist-get 'id entry))
          (host wallabag-host)
          (token (or wallabag-token (wallabag-request-token)))
-         (beg (line-beginning-position))
-         (end (1+ (line-end-position))))
+         ori)
     (request (format "%s/api/entries/%s.json" host id)
           :parser 'json-read
           :type "PATCH"
@@ -1219,7 +1218,8 @@ Under table mode, the tile width is controlled by
  `wallabag-search-trailing-width'.
 If list mode, the title is full width."
   :type '(choice (const :tag "Table" table)
-                 (const :tag "List" list)))
+                 (const :tag "List" list))
+  :group 'wallabag)
 
 (defcustom wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date")
   "The items to be printed in the search buffer.
@@ -1498,9 +1498,10 @@ for other characters, they are printed as they are."
   "Return the appropriate buffer name for wallabag entry."
   "*wallabag-entry*")
 
-(defun wallabag-show-entry (entry &optional switch)
+(defun wallabag-show-entry (entry &optional switch html)
   "Display ENTRY in the current buffer.
-Optional argument SWITCH to switch to *wallabag-entry* buffer to other window."
+Optional argument SWITCH to switch to *wallabag-entry* buffer to other window.
+Optional argument HTML to render the content as HTML."
   (unless (derived-mode-p 'wallabag-entry-mode)
       (when (get-buffer (wallabag-show--buffer-name))
         (kill-buffer (wallabag-show--buffer-name))))

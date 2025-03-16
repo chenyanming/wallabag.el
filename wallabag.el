@@ -7,7 +7,7 @@
 ;; Keywords: tools
 ;; Created: 13 April 2021
 ;; Version: 1.1.0
-;; Package-Requires: ((emacs "27.1") (request "0.3.3") (emacsql "3.0.0"))
+;; Package-Requires: ((emacs "27.1") (request "0.3.3") (s "1.12.0") (emacsql "3.0.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -658,7 +658,7 @@ TAGS are seperated by comma."
                (cl-find
                 (completing-read
                  "Selete the tag you want to delete: "
-                 (mapcar 'cdr tag-list)) tag-list :test 'string= :key 'cdr)))
+                 (mapcar #'cdr tag-list)) tag-list :test 'string= :key 'cdr)))
          (beg (line-beginning-position))
          (end (1+ (line-end-position)))
          ori)
@@ -919,7 +919,7 @@ TAGS are seperated by comma."
   (if wallabag-all-tags
       (completing-read
        "Selete the tag you want to add: "
-       (append '("All" "Unread" "Starred" "Archive" "All") (mapcar 'cdr wallabag-all-tags)))
+       (append '("All" "Unread" "Starred" "Archive" "All") (mapcar #'cdr wallabag-all-tags)))
       (wallabag-request-tags 'wallabag-get-tag-name)
       "")) ;; return empty tag name to avoid error
 

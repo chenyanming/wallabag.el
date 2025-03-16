@@ -1515,7 +1515,7 @@ Optional argument HTML to render the content as HTML."
          (created-at (alist-get 'created_at entry))
          (tag (alist-get 'tag entry))
          (domain-name (or (alist-get 'domain_name entry) ""))
-         (content (or (alist-get 'content entry) ""))
+         (content (or html (alist-get 'content entry) ""))
          (url (alist-get 'url entry))
          (origin-url (or (alist-get 'origin_url entry) ""))
          beg end)
@@ -1858,21 +1858,11 @@ record will be shown.
   :group 'wallabag
   :type 'boolean)
 
-(eval-when-compile
-  (defvar wallabag-show-entry-after-creation))
-
 (defvar wallabag-search-current-page 1
   "The number of current page in the current search result.")
 
-(eval-when-compile
-  (defvar wallabag-search-current-page))
-
 (defvar wallabag-search-pages 0
   "The number of pages in the current search result.")
-
-(eval-when-compile
-  (defvar wallabag-search-pages))
-
 
 (defun wallabag-search-more-data (page)
   "Update data by PAGE."

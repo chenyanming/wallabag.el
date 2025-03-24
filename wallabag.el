@@ -1,4 +1,4 @@
-;;; wallabag.el --- Emacs wallabag client -*- lexical-binding: t; -*-
+;;; wallabag.el --- Save and manage articles with wallabag -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021 Damon Chan
 
@@ -26,7 +26,35 @@
 
 ;;; Commentary:
 
-;; Emacs wallabag client.
+;; Save and manage articles with wallabag.
+;;
+;; Wallabag is an open-source self-hosted web application designed to help users
+;; save and archive articles or web pages for later reading. It allows you to
+;; save content from the web, whether it's news articles, blog posts, or any
+;; other readable content, and access it offline. Wallabag removes unwanted
+;; elements like ads and pop-ups, leaving only the essential text and images,
+;; offering a clean, distraction-free reading experience.
+;; Ref: https://github.com/wallabag/wallabag
+;;
+;; wallabag.el support the following features:
+;; - Request all entries
+;; - Request all tags
+;; - Add tags for one entry
+;; - Delete tag for one entry
+;; - Request format for one entry
+;; - Add one entry
+;; - Add one entry with current buffer content (Only Emacs has this feature!)
+;; - Delete one entry
+;; - Copy as org links (Only Emacs has this feature!)
+;; - Offline database (Sqlite)
+;; - Full update
+;; - Real time search and filter
+;; - Sidebar supported
+;; - Select with Ivy
+;; - sync with all clients (mobile, web, browser extention etc)
+;; - Beautify: Support [[https://github.com/chenyanming/shrface][shrface]]
+;; - Advanced search and filtering (space separated)
+;; - Annotation: Support [[https://github.com/chenyanming/paw][paw]]
 
 ;;; Code:
 

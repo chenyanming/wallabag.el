@@ -1091,7 +1091,7 @@ TAGS are seperated by comma."
     map)
   "Keymap for `wallabag-search-mode'.")
 
-(if (featurep 'evil)
+(if (bound-and-true-p evil-mode)
     (evil-define-key* '(normal emacs) wallabag-search-mode-map
       (kbd "<RET>") 'wallabag-view
       (kbd "v") 'wallabag-view
@@ -1523,7 +1523,7 @@ for other characters, they are printed as they are."
     map)
   "Keymap for `wallabag-entry-mode'.")
 
-(if (featurep 'evil)
+(if (bound-and-true-p evil-mode)
     (evil-define-key* '(normal emacs) wallabag-entry-mode-map
       (kbd "[") 'wallabag-previous-entry
       (kbd "]") 'wallabag-next-entry
@@ -1702,7 +1702,7 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
     map)
   "Keymap for `wallabag-sidebar-mode'.")
 
-(if (featurep 'evil)
+(if (bound-and-true-p evil-mode)
     (evil-define-key* '(normal emacs) wallabag-sidebar-mode-map
       (kbd "'") 'wallabag-toggle-sidebar
       (kbd "<RET>") 'wallabag-sidebar-find-tag

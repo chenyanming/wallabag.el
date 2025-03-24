@@ -72,7 +72,7 @@
   (require 'ivy))
 (require 'consult nil t)
 
-(declare-function evil-define-key "evil")
+(declare-function evil-define-key* "ext:evil-core.el" t t)
 (declare-function ivy-read "ivy")
 
 (defcustom wallabag-host ""
@@ -1092,7 +1092,7 @@ TAGS are seperated by comma."
   "Keymap for `wallabag-search-mode'.")
 
 (if (featurep 'evil)
-    (evil-define-key '(normal emacs) wallabag-search-mode-map
+    (evil-define-key* '(normal emacs) wallabag-search-mode-map
       (kbd "<RET>") 'wallabag-view
       (kbd "v") 'wallabag-view
       (kbd "V") 'wallabag-browse-url
@@ -1524,7 +1524,7 @@ for other characters, they are printed as they are."
   "Keymap for `wallabag-entry-mode'.")
 
 (if (featurep 'evil)
-    (evil-define-key '(normal emacs) wallabag-entry-mode-map
+    (evil-define-key* '(normal emacs) wallabag-entry-mode-map
       (kbd "[") 'wallabag-previous-entry
       (kbd "]") 'wallabag-next-entry
       (kbd "&") 'wallabag-browse-url
@@ -1703,7 +1703,7 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
   "Keymap for `wallabag-sidebar-mode'.")
 
 (if (featurep 'evil)
-    (evil-define-key '(normal emacs) wallabag-sidebar-mode-map
+    (evil-define-key* '(normal emacs) wallabag-sidebar-mode-map
       (kbd "'") 'wallabag-toggle-sidebar
       (kbd "<RET>") 'wallabag-sidebar-find-tag
       (kbd "g r") 'wallabag-search-clear-filter

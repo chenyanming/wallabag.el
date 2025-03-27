@@ -293,8 +293,7 @@ When live editing the filter, it is bound to :live.")
 (defun wallabag-password ()
   "Return wallabag password."
   (if (s-blank? wallabag-password)
-      (progn
-        (auth-info-password (car (auth-source-search :host "wallabag"))))
+      (auth-source-pick-first-password :host "wallabag")
     wallabag-password))
 
 (defun wallabag-clientid ()

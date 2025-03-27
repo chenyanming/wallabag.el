@@ -67,6 +67,7 @@
 (require 'shr)
 (require 'browse-url)
 (require 's)
+(require 'map)
 (ignore-errors
   (require 'evil)
   (require 'ivy))
@@ -265,14 +266,73 @@ When live editing the filter, it is bound to :live.")
 
 ;;; requests
 
-(defun wallabag-request-token ()
-  "Request wallbag token."
+(defun wallabag-credentials ()
+  "Get wallabag credentials."
+  (auth-source-forget-all-cached)
+  (list
+   :host (wallabag-host)
+   :username (wallabag-username)
+   :password (wallabag-password)
+   :clientid (wallabag-clientid)
+   :secret (wallabag-secret)))
+
+(defun wallabag-host ()
+  "Return wallabag host."
+  (if (s-blank? wallabag-host)
+      (progn
+        (plist-get (car (auth-source-search :host "wallabag")) :domain))
+    wallabag-host))
+
+(defun wallabag-username ()
+  "Return wallabag username."
+  (if (s-blank? wallabag-username)
+      (progn
+        (plist-get (car (auth-source-search :host "wallabag")) :user))
+    wallabag-username))
+
+(defun wallabag-password ()
+  "Return wallabag password."
+  (if (s-blank? wallabag-password)
+      (progn
+        (auth-info-password (car (auth-source-search :host "wallabag"))))
+    wallabag-password))
+
+(defun wallabag-clientid ()
+  "Return wallabag clientid."
+  (if (s-blank? wallabag-clientid)
+      (progn
+        (auth-source-forget-all-cached)
+        (plist-get (car (auth-source-search :host "wallabag")) :clientid))
+    wallabag-clientid))
+
+(defun wallabag-secret ()
+  "Return wallabag secret."
+  (if (s-blank? wallabag-secret)
+      (progn
+        (plist-get (car (auth-source-search :host "wallabag")) :client-secret))
+    wallabag-secret))
+
+(defun wallabag-request-token-retry (func &rest args)
+  "Retrieve a wallabag token and call FUNC with ARGS."
+  (cl-function
+   (lambda (&key data error-thrown &allow-other-keys)
+     (if (not (equal (map-elt data 'error) "invalid_grant"))
+         (message (format "Request failed with: %S" error-thrown))
+       (message "Authenticating...")
+       (wallabag-request-token :callback func :args args)))))
+
+(cl-defun wallabag-request-token (&key callback args)
+  "Request wallbag token.
+Use `auth-source-search' to setup if they are in store.
+Call CALLBACK with ARGS.
+Example:
+machine wallabag domain \"https://example.com\" user \"xxx\" password \"xxx\" clientid \"xxx\" client-secret \"xxx\""
   (interactive)
-  (let ((host wallabag-host)
-        (username wallabag-username)
-        (password wallabag-password)
-        (clientid wallabag-clientid)
-        (secret wallabag-secret)
+  (let ((host (wallabag-host))
+        (username (wallabag-username))
+        (password (wallabag-password))
+        (clientid (wallabag-clientid))
+        (secret (wallabag-secret))
         token)
     (request (format "%s/oauth/v2/token" host)
       :parser 'json-read
@@ -282,13 +342,14 @@ When live editing the filter, it is bound to :live.")
       :sync t
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
-                  (setq token (assoc-default 'access_token data) ))))
+                  (setq token (assoc-default 'access_token data) )
+                  (when callback (apply callback args)))))
     (setq wallabag-token token)))
 
 (defun wallabag-request-server-info ()
   "Request the wallabag server info."
   (interactive)
-  (let* ((host wallabag-host)
+  (let* ((host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token))))
     (request (format "%s/api/info.json" host)
       :parser 'json-read
@@ -297,10 +358,7 @@ When live editing the filter, it is bound to :live.")
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-request-server-info))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-request-server-info)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq wallabag-appname (assoc-default 'appname data))
@@ -311,7 +369,7 @@ When live editing the filter, it is bound to :live.")
 (defun wallabag-request-user-info ()
   "Request the wallabag user info."
   (interactive)
-  (let* ((host wallabag-host)
+  (let* ((host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token))))
     (request (format "%s/api/user.json" host)
       :parser 'json-read
@@ -320,10 +378,7 @@ When live editing the filter, it is bound to :live.")
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-request-user-info))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-request-user-info)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq wallabag-user-id (assoc-default 'id data))
@@ -340,7 +395,7 @@ the new entries and update the database, and delete the latest entires
 if they have been deleted in server."
   (interactive)
   (setq wallabag-retrieving-p "Updating...")
-  (let ((host wallabag-host)
+  (let ((host (wallabag-host))
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
@@ -358,10 +413,7 @@ if they have been deleted in server."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-request-new-entries))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-request-new-entries)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
@@ -387,7 +439,7 @@ By default retrieval starts with the first page of results. With
 non-nil integer PAGE retrieval starts at this page."
   (if (<= num-entries 0)
       (message "No more entries to retrive.")
-    (let* ((host wallabag-host)
+    (let* ((host (wallabag-host))
            (token (or wallabag-token (wallabag-request-token)))
            (sort "created")
            (order "desc")
@@ -409,10 +461,7 @@ non-nil integer PAGE retrieval starts at this page."
         (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                        (message "Wallaget request error: %S" error-thrown)
                        (setq wallabag-retrieving-p nil)))
-        :status-code '((401 . (lambda (&rest _)
-                                (message "Authenticating...")
-                                (wallabag-request-token)
-                                (funcall #'wallabag-request-and-insert-entries num-entries callback args page))))
+        :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-request-and-insert-entries num-entries callback args page)))
         :success (cl-function
                   (lambda (&key data &allow-other-keys)
                     ;; save the original string
@@ -467,7 +516,7 @@ non-nil integer PAGE retrieval starts at this page."
 entries do not exist in server will be deleted."
   (interactive)
   (setq wallabag-retrieving-p "Updating...")
-  (let ((host wallabag-host)
+  (let ((host (wallabag-host))
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
@@ -486,10 +535,7 @@ entries do not exist in server will be deleted."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-request-and-synchronize-entries))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-request-and-synchronize-entries)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (setq entries (append (wallabag-parse-json (json-read-from-string data)) nil))
@@ -516,7 +562,7 @@ notice: this function should be called only when no new entires in the
 server!
 Argument PERPAGE Per Page."
   (setq wallabag-retrieving-p "Verifing...") ; indicate it is retrieving.
-  (let ((host wallabag-host)
+  (let ((host (wallabag-host))
         (token (or wallabag-token (wallabag-request-token)))
         (sort "created")
         (order "desc")
@@ -538,10 +584,7 @@ Argument PERPAGE Per Page."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-request-and-delete-entries perpage))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-request-and-delete-entries perpage)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   ;; save the original string
@@ -594,7 +637,7 @@ Argument PERPAGE Per Page."
   (interactive)
   (let* ((entry (wallabag-find-candidate-at-point))
          (id (alist-get 'id entry))
-         (host wallabag-host)
+         (host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token))))
     (request (format "%s/api/entries/%s/export.%s" host id (or format "pdf"))
       :encoding 'binary
@@ -603,10 +646,7 @@ Argument PERPAGE Per Page."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-request-format format))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-request-format format)))
       :success (cl-function
                 (lambda (&key response &allow-other-keys)
                   (message "Done: %s" (request-response-header response "content-type"))
@@ -623,7 +663,7 @@ Argument PERPAGE Per Page."
   "Request all tags.
 Optional argument CALLBACK request callback."
   (interactive)
-  (let* ((host wallabag-host)
+  (let* ((host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token))))
     (request (format "%s/api/tags.json" host)
       :parser 'json-read
@@ -632,10 +672,7 @@ Optional argument CALLBACK request callback."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-request-tags callback))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-request-tags callback)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let ((tag-list (mapcar
@@ -658,7 +695,7 @@ TAGS are seperated by comma."
                 (wallabag-get-tag-name)))
   (let* ((entry (wallabag-find-candidate-at-point) )
          (id (alist-get 'id entry))
-         (host wallabag-host)
+         (host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token)))
          ori)
     (request (format "%s/api/entries/%s/tags.json" host id)
@@ -670,10 +707,7 @@ TAGS are seperated by comma."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-add-tags tags))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-add-tags tags)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let* ((inhibit-read-only t)
@@ -691,12 +725,12 @@ TAGS are seperated by comma."
                         (wallabag-show-entry (car (wallabag-db-select :id id))))
                     (message "Add Tags Done")))))))
 
-(defun wallabag-remove-tag ()
-  "Remove one tag of the entry."
+(defun wallabag-remove-tag (&optional tag)
+  "Remove one TAG of the entry."
   (interactive)
   (let* ((entry (wallabag-find-candidate-at-point) )
          (id (alist-get 'id entry))
-         (host wallabag-host)
+         (host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token)))
          (tag-list (mapcar
                     (lambda(x)
@@ -704,11 +738,11 @@ TAGS are seperated by comma."
                        (alist-get 'id x)
                        (alist-get 'label x)))
                     (append (alist-get 'tags entry) nil)))
-         (tag (car
-               (cl-find
-                (completing-read
-                 "Selete the tag you want to delete: "
-                 (mapcar #'cdr tag-list)) tag-list :test 'string= :key 'cdr)))
+         (tag (or tag (car
+                       (cl-find
+                        (completing-read
+                         "Selete the tag you want to delete: "
+                         (mapcar #'cdr tag-list)) tag-list :test 'string= :key 'cdr)) ))
          ori)
     (request (format "%s/api/entries/%s/tags/%s.json" host id tag)
       :type "DELETE"
@@ -718,10 +752,7 @@ TAGS are seperated by comma."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-remove-tag))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-remove-tag tag)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                   (let* ((inhibit-read-only t)
@@ -752,7 +783,7 @@ TAGS are seperated by comma."
                 (_ (if url url (read-from-minibuffer "What URL do you want to add? ")))))
          ;; FIXME if no tags pull before, it will return empty string
          (tags (wallabag-get-tag-name))
-         (host wallabag-host)
+         (host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token))))
     (request (format "%s/api/entries.json" host)
       :parser 'json-read
@@ -766,10 +797,7 @@ TAGS are seperated by comma."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-add-entry url))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-add-entry url)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                     ;; convert tags array to tag comma seperated string
@@ -808,7 +836,7 @@ TAGS are seperated by comma."
          ;; FIXME if no tags pull before, it will return empty string
          ;; (tags (wallabag-get-tag-name))
          (tags "") ;; use empty string for now, it is faster to insert, and tags can be added later
-         (host wallabag-host)
+         (host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token))))
     (require 'org-id)
     (request (format "%s/api/entries.json" host)
@@ -825,10 +853,7 @@ TAGS are seperated by comma."
       :error
       (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                      (message "Wallaget request error: %S" error-thrown)))
-      :status-code '((401 . (lambda (&rest _)
-                              (message "Authenticating...")
-                              (wallabag-request-token)
-                              (funcall #'wallabag-insert-entry url title content))))
+      :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-insert-entry url title content)))
       :success (cl-function
                 (lambda (&key data &allow-other-keys)
                     ;; convert tags array to tag comma seperated string
@@ -858,7 +883,7 @@ TAGS are seperated by comma."
   (let* ((entry (wallabag-find-candidate-at-point) )
          (id (alist-get 'id entry))
          (title (alist-get 'title entry))
-         (host wallabag-host)
+         (host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token)))
          ori)
     (if (yes-or-no-p (format "Do you really want to Delete \"%s\"?" title))
@@ -870,10 +895,7 @@ TAGS are seperated by comma."
           :error
           (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                          (message "Wallaget request error: %S" error-thrown)))
-          :status-code '((401 . (lambda (&rest _)
-                                  (message "Authenticating...")
-                                  (wallabag-request-token)
-                                  (funcall #'wallabag-delete-entry))))
+          :status-code `((401 . ,(wallabag-request-token-retry #'wallabag-delete-entry)))
           :success (cl-function
                     (lambda (&key _data &allow-other-keys)
                       (let ((inhibit-read-only t))
@@ -901,7 +923,7 @@ TAGS are seperated by comma."
                                                            (wallabag-find-candidate-at-point))))))
      (let* ((entry (wallabag-find-candidate-at-point) )
          (id (alist-get 'id entry))
-         (host wallabag-host)
+         (host (wallabag-host))
          (token (or wallabag-token (wallabag-request-token)))
          ori)
     (request (format "%s/api/entries/%s.json" host id)
@@ -913,10 +935,7 @@ TAGS are seperated by comma."
           :error
           (cl-function (lambda (&rest args &key error-thrown &allow-other-keys)
                          (message "Wallaget request error: %S" error-thrown)))
-          :status-code '((401 . (lambda (&rest _)
-                                  (message "Authenticating...")
-                                  (wallabag-request-token)
-                                  (funcall #',(intern (format "wallabag-update-entry-%s" field)) new))))
+          :status-code `((401 . ,(wallabag-request-token-retry #',(intern (format "wallabag-update-entry-%s" field)) new)))
           :success (cl-function
                     (lambda (&key data &allow-other-keys)
                       (let* ((inhibit-read-only t)
@@ -1033,7 +1052,7 @@ TAGS are seperated by comma."
               ""
             (format "%s%s   "
                     (propertize "Wallabag: " 'face font-lock-preprocessor-face)
-                    (propertize (format "%s" wallabag-host) 'face font-lock-type-face)))
+                    (propertize (format "%s" (wallabag-host)) 'face font-lock-type-face)))
           (concat
            (if wallabag-retrieving-p
                (propertize wallabag-retrieving-p 'face font-lock-warning-face)
@@ -1498,13 +1517,13 @@ for other characters, they are printed as they are."
   "Request new entries, clear the filter keyword, and update *wallabag-search*."
   (interactive)
   (call-interactively #'wallabag-request-new-entries)
-  (message "Retriving new articles from wallabag host %s ..." wallabag-host))
+  (message "Retriving new articles from wallabag host %s ..." (wallabag-host)))
 
 (defun wallabag-search-synchronize-and-clear-filter ()
   "Synchronize entries, clear the filter keyword, and update *wallabag-search*."
   (interactive)
   (call-interactively #'wallabag-request-and-synchronize-entries)
-  (message "Synchronizing articles from wallabag host %s ..." wallabag-host))
+  (message "Synchronizing articles from wallabag host %s ..." (wallabag-host)))
 
 ;;; wallabag-entry-mode
 

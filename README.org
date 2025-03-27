@@ -100,16 +100,12 @@ built-in [[https://www.gnu.org/software/emacs/manual/html_mono/auth.html][auth-s
 
 Create an encrypted =~/.authinfo.gpg= file with the lines:
 #+begin_src
-machine <wallabag-host> login <username> password <password>
-machine <wallabag-client> login <client-id> password <client-secret>
+machine wallabag domain "https://example.com" user "xxx" password "xxx" clientid "xxx" client-secret "xxx"
 #+end_src
 
-Then, we can use that when setting the wallabag password and secret variables in your config above.
-#+begin_src emacs-lisp
-  (setq wallabag-password (auth-source-pick-first-password :host "<wallabag-host>")
-        wallabag-secret (auth-source-pick-first-password :host "<wallabag-client>"))
-#+end_src
+Wallabag will get the credentials when needed without saving them in memory. 
 
+You can also hardcode ~wallabag-host~, ~wallabag-username~, ~wallabag-password~, ~wallabag-clientid~, ~wallabag-secret~ but it is less secure.
 
 * Image Caching
 Wallabag will not download the images, but using Emacs [[https://www.gnu.org/software/emacs/manual/html_node/url/Disk-Caching.html][disk caching]] capability. Setting ~url-automatic-caching~ non-nil causes documents to be cached automatically.

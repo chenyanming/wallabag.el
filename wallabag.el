@@ -197,8 +197,8 @@ should change it to contain the rendered version of it."
   :type 'hook)
 
 
-(defcustom wallabag-search-buffer-after-render-hook nil
-  "A hook called after *wallabag-search* has finished rendering."
+(defcustom wallabag-search-buffer-after-update-hook nil
+  "A hook called after *wallabag-search* has finished update."
   :group 'wallabag
   :type 'hook)
 
@@ -1909,7 +1909,7 @@ record will be shown.
             (goto-char (point-min)))
         (emacsql-close (wallabag-db))
         (error "Database Error, please reopen with `M-x wallabag'")))
-    (run-hooks 'wallabag-search-buffer-after-render-hook)))
+    (run-hooks 'wallabag-search-buffer-after-update-hook)))
 
 (defun wallabag-search-get-filtered-entries (&optional page)
   "Get wallabag entries by PAGE."

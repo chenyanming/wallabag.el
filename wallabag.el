@@ -317,7 +317,7 @@ When live editing the filter, it is bound to :live.")
   (cl-function
    (lambda (&key data error-thrown &allow-other-keys)
      (if (not (equal (map-elt data 'error) "invalid_grant"))
-         (message (format "Request failed with: %S" error-thrown))
+         (message "Request failed with: %S" error-thrown)
        (message "Authenticating...")
        (wallabag-request-token :callback func :args args)))))
 

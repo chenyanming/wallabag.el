@@ -315,8 +315,8 @@ When live editing the filter, it is bound to :live.")
   "Retrieve a wallabag token and call FUNC with ARGS."
   (cl-function
    (lambda (&key data error-thrown &allow-other-keys)
-     (if (not (equal (map-elt data 'error) "invalid_grant"))
-         (message "Request failed with: %S" error-thrown)
+     (if (not (s-contains? "invalid_grant" data))
+         (message "Request failed with: %s" data)
        (message "Authenticating...")
        (wallabag-request-token :callback func :args args)))))
 

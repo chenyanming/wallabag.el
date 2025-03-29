@@ -32,10 +32,6 @@
 Alist with elements in form (emoji . image)")
 (defvar wallabag-emoji-file (concat (file-name-directory load-file-name) "emojis.alist"))
 
-(defvar wallabag-cache-file
-  (expand-file-name (concat user-emacs-directory "wallabag-cache.el"))
-  "File to store wallabag cache.")
-
 (defvar wallabag-current-cache nil
   "Current cache of the wallabag entry.")
 
@@ -54,6 +50,12 @@ Alist with elements in form (emoji . image)")
 
 (defvar wallabag-response-overlay nil
   "Overlay for displaying GPTel streaming responses dynamically.")
+
+(defcustom wallabag-cache-file
+  (expand-file-name (concat user-emacs-directory "wallabag-cache.el"))
+  "File to store wallabag cache."
+  :type 'file
+  :group 'wallabag)
 
 (defcustom wallabag-summary-prompts '(("一句话总结" . "用一句清晰且事实的句子总结这篇文章，抓住核心信息，不重复标题。使用简体中文撰写。")
                                       ("一般总结" . "以清晰简洁的方式总结这篇文章的关键点，突出主要论点、发现和结论。使用简体中文撰写。")

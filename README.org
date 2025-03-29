@@ -134,7 +134,7 @@ Create a bookmarklet with:
 #+begin_src emacs-lisp
 M-x wallabag-summary ;; or press ?
 #+end_src
-Wallabag will use gptel to generate the summary add overlay into the article.
+Wallabag will use gptel to generate the summary overlay into the begining of the article.
 
 #+attr_org: :width 600px
 [[file:images/summary.gif]]

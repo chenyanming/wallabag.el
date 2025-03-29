@@ -32,6 +32,77 @@
 Alist with elements in form (emoji . image)")
 (defvar wallabag-emoji-file (concat (file-name-directory load-file-name) "emojis.alist"))
 
+(defvar wallabag-cache-file
+  (expand-file-name (concat user-emacs-directory "wallabag-cache.el"))
+  "File to store wallabag cache.")
+
+(defvar wallabag-current-cache nil
+  "Current cache of the wallabag entry.")
+
+(defvar wallabag-cache-table
+  (if (file-exists-p wallabag-cache-file)
+      (condition-case nil
+          (let ((coding-system-for-read 'utf-8))
+            (with-temp-buffer
+              (insert-file-contents wallabag-cache-file)
+              (goto-char (point-min))
+              (read (current-buffer))))
+        (error (message "Could not sync wallabag cache, starting over.")
+               (make-hash-table :size 2048 'equal)))
+    (make-hash-table :size 2048 :test 'equal))
+  "Hash table to store wallabag cache.")
+
+(defvar wallabag-response-overlay nil
+  "Overlay for displaying GPTel streaming responses dynamically.")
+
+(defcustom wallabag-summary-prompts '(("一句话总结" . "用一句清晰且事实的句子总结这篇文章，抓住核心信息，不重复标题。使用简体中文撰写。")
+                                      ("一般总结" . "以清晰简洁的方式总结这篇文章的关键点，突出主要论点、发现和结论。使用简体中文撰写。")
+                                      ("要点列表总结" . "提供一份这篇文章主要内容的要点列表。仅用点列回答！使用简体中文撰写。")
+                                      ("客观 vs. 观点分析" . "通过区分客观事实和作者的观点来总结这篇文章，明确区分两者。使用简体中文撰写。")
+                                      ("简化总结" . "用简单易懂的语言总结这篇文章，就像向非专业人士解释一样。使用简体中文撰写。")
+                                      ("用模板总结" . wallabag-summary-template-chinese)
+                                      ("One sentence summary" . "Summarize this article in one clear and factual sentence, capturing the core message without repeating the title.")
+                                      ("General summary" . "Summarize the key points of this article in a clear and concise manner, highlighting the main arguments, findings, and conclusions.")
+                                      ("Bullet list summary" . "Provide a bullet-point summary of the main takeaways from this article. Answer only in bullets!")
+                                      ("Objective vs. Opinion analysis" . "Summarize this article by separating objective facts from the author's opinions, clearly distinguishing the two.")
+                                      ("Simplified summary" . "Summarize this article in simple, easy-to-understand language as if explaining to a non-expert.")
+                                      ("Summarize with Template" . wallabag-summary-template-english))
+  "Prompts for the summary."
+  :type 'alist
+  :group 'wallabag)
+
+(defcustom wallabag-summary-template-english
+  (concat "Summarize the highlights of the content and output a useful summary in a few sentences, your output should use the following template:\n"
+          "*** Summary\n"
+          "**** Highlights\n"
+          "- [Emoji] Bulletpoint\n\n"
+          "Your task is to summarize the text I have given you in up to seven concise bullet points, starting with a short highlight. "
+          "Choose an appropriate emoji for each bullet point. "
+          "Use the text above: {{Title}} {{Transcript}}.\n")
+  "English Template for Wallabag summaries."
+  :type 'string
+  :group 'wallabag)
+
+(defcustom wallabag-summary-template-chinese
+  (concat
+   "请阅读以下文章并生成摘要"
+   "文章标题：[标题]"
+   "摘要要求："
+   "去掉时间，作者，网站。"
+   "使用简体中文撰写。"
+   "提取文章的主要信息，包括关键观点、重要数据或技术内容。"
+   "语言简洁流畅，适合快速阅读。"
+   "若文章涉及技术概念，保持准确性并避免过度简化。"
+   "若适用，请提供简短的背景信息以帮助理解。")
+  "Chinese Template for Wallabag summaries."
+  :type 'string
+  :group 'wallabag)
+
+(defcustom wallabag-hr-length 60
+  "Length of the horizontal rule."
+  :type 'integer
+  :group 'wallabag)
+
 (defcustom wallabag-emoji-custom-alist nil
   "*Alist of custom emojis to add along with `etc/emojis.alist'."
   :type 'alist
@@ -133,6 +204,107 @@ ALIGN should be a keyword :left or :right."
 (defun wallabag-clamp (min value max)
   "Clamp a VALUE between MIN and MAX."
   (min max (max min value)))
+
+(defun wallabag-current-cache-save (field value)
+  "Save FIELD with VALUE to `wallabag-current-cache`."
+  (unless (hash-table-p wallabag-current-cache)
+    (setq wallabag-current-cache (make-hash-table :test 'equal)))
+  (puthash field value wallabag-current-cache))
+
+(defun wallabag-cache-save ()
+  "Save a copy of the current cache to the cache table."
+  (when-let ((id (alist-get 'id (wallabag-find-candidate-at-point))))
+    ;; Store a fresh copy instead of a reference
+    (puthash id (copy-hash-table wallabag-current-cache) wallabag-cache-table)))
+
+
+(defun wallabag-cache-write ()
+  "Write the cache table to the cache file."
+  (when (and (boundp 'wallabag-cache-table)
+             (hash-table-p wallabag-cache-table)
+             (not (hash-table-empty-p wallabag-cache-table)))
+    (let ((write-region-inhibit-fsync t)
+          (coding-system-for-write 'utf-8)
+          (print-level nil)
+          (print-length nil))
+      (with-temp-file wallabag-cache-file
+        (insert ";;; -*- lisp-data -*-\n"
+   (prin1-to-string wallabag-cache-table))))))
+
+(defun wallabag-get-cache(field)
+  "Get the FIELD of the current entry from cache."
+  (let* ((entry (wallabag-find-candidate-at-point))
+         (id (alist-get 'id entry))
+         (cache (gethash id wallabag-cache-table)))
+    (if (hash-table-p cache)
+        (gethash field cache)
+      nil)))
+
+(defun wallabag-create-or-update-overlay (response &optional no-save)
+  "Create or update the dynamic overlay with RESPONSE.
+Optional argument NO-SAVE Don't save to cache."
+  (with-current-buffer "*wallabag-entry*"
+    (save-excursion
+      ;; Move to the designated position (after line 2)
+      (if (stringp response)
+          (progn
+            (goto-char (point-min))
+            (forward-line 2)
+            (let ((start (line-beginning-position))
+                  (end (line-end-position)))
+              ;; Create the overlay if it doesn't exist
+              (unless (overlayp wallabag-response-overlay)
+                (setq wallabag-response-overlay (make-overlay start end))
+                (overlay-put wallabag-response-overlay 'after-string ""))
+
+              ;; Append new text to the existing overlay content
+              (overlay-put wallabag-response-overlay
+                           'after-string
+                           (concat (overlay-get wallabag-response-overlay 'after-string)
+                                   (propertize response 'face (list :height 0.9))))) )
+        (unless no-save
+          (wallabag-current-cache-save 'summary (overlay-get wallabag-response-overlay 'after-string))
+          (wallabag-cache-save)
+          (wallabag-cache-write)
+          (message "Summary saved."))
+        (overlay-put wallabag-response-overlay
+                     'after-string
+                     (concat (overlay-get wallabag-response-overlay 'after-string)
+                             "\n"
+                             (propertize (make-string (min wallabag-hr-length (window-width)) ?_) 'face 'wallabag-hr-face)
+                             "\n"))))))
+
+(defun wallabag-remove-summary-overlay ()
+  "Remove the summary overlay."
+  (when (overlayp wallabag-response-overlay)
+    (delete-overlay wallabag-response-overlay)
+    (setq wallabag-response-overlay nil)))
+
+(defun wallabag-summary (arg)
+  "Get the summary of the current entry using gptel.
+Argument ARG Force to generate summary."
+  (interactive "P")
+  (require 'gptel)
+  (let* ((summary (wallabag-get-cache 'summary))
+         (prompt (if (and summary (not arg))
+                     ""
+                   (assoc-default
+                    (completing-read "Select a prompt: " wallabag-summary-prompts nil t)
+                    wallabag-summary-prompts)))
+         (full-query (format "%s\n%s" prompt (buffer-string))))
+    (wallabag-remove-summary-overlay)
+    (if (and summary (not arg))
+        (progn
+          (wallabag-create-or-update-overlay summary t)
+          (wallabag-create-or-update-overlay t t))
+      (gptel-request full-query
+        :stream t
+        :callback
+        (lambda (response _)
+          (when response
+            (wallabag-create-or-update-overlay response)
+            (gptel--sanitize-model)
+            (gptel--update-status " Ready" 'success)))))))
 
 (provide 'wallabag-util)
 

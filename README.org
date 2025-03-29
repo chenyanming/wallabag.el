@@ -10,6 +10,7 @@
 - [[#image-caching][Image Caching]]
 - [[#retrieve-new-entries-after-m-x-wallabag][Retrieve new entries after =M-x wallabag=]]
 - [[#use-org-protocol-to-save-page][Use org-protocol to save page]]
+- [[#use-ai-to-generate-summary][Use AI to generate summary]]
 - [[#keybindings][Keybindings]]
 
 * Description
@@ -129,6 +130,14 @@ Create a bookmarklet with:
 - If [[https://www.piwheels.org/project/emacs-paw/][paw-server]] is running, use [[file:js/wallabag_insert_entry.js]] (send html to paw-server, and save the page to wallabag)
 - If [[https://www.piwheels.org/project/emacs-paw/][paw-server]] is not running, use [[file:js/wallabag_add_entry.js]] (only send url to wallabag server)
 
+* Use AI to generate summary
+#+begin_src emacs-lisp
+M-x wallabag-summary ;; or press ?
+#+end_src
+Wallabag will use gptel to generate the summary add overlay into the article.
+
+#+attr_org: :width 600px
+[[file:images/summary.gif]]
 
 * Keybindings
 Start with ~M-x wallabag~. 

@@ -144,6 +144,12 @@
   "Face used for current page button."
   :group 'wallabag-faces)
 
+(defface wallabag-hr-face
+  '((default :inherit org-hide)
+    (((background light)) :strike-through "gray70")
+    (t :strike-through "gray30"))
+  "Face used for horizontal ruler.")
+
 (provide 'wallabag-faces)
 
 ;;; wallabag-faces.el ends here

@@ -1544,6 +1544,7 @@ for other characters, they are printed as they are."
     (define-key map "v" #'wallabag-view)
     (define-key map "V" #'wallabag-browse-url)
     (define-key map "o" #'wallabag-original-entry)
+    (define-key map "?" #'wallabag-summary)
     map)
   "Keymap for `wallabag-entry-mode'.")
 
@@ -1557,6 +1558,7 @@ for other characters, they are printed as they are."
       (kbd "t") 'wallabag-add-tags
       (kbd "T") 'wallabag-remove-tag
       (kbd "D") 'wallabag-delete-entry
+      (kbd "?") 'wallabag-summary
       (kbd "q") 'wallabag-entry-quit))
 
 (define-derived-mode wallabag-entry-mode fundamental-mode "wallabag-entry"
@@ -1638,6 +1640,9 @@ Optional argument HTML to render the content as HTML."
         (setq end (point))
         (wallabag-entry-mode)
         (funcall wallabag-render-html-function beg end)
+        ;; show cached summary if available
+        (if (wallabag-get-cache 'summary)
+            (wallabag-summary nil))
         (goto-char (point-min))))))
 
 (defun wallabag-render-html (begin end)

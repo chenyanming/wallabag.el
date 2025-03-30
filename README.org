@@ -22,30 +22,25 @@ Emacs [[https://github.com/wallabag/wallabag][Wallabag]] client.
 [[file:images/paw.png]]
 
 * Features
-
-- [x] Request all entries
-- [x] Request all tags
-- [x] Add tags for one entry
-- [x] Delete tag for one entry
-- [x] Request format for one entry
-- [x] Add one entry
-- [x] Add one entry with current buffer content (Only Emacs has this feature!)
-- [x] Delete one entry
-- [x] Copy as org links (Only Emacs has this feature!)
-- [x] Offline database (Sqlite)
-- [x] Full update
-- [x] Real time search and filter
-- [x] Sidebar supported
-- [x] Select with Ivy
-- [x] sync with all clients (mobile, web, browser extention etc)
-- [x] Beautify: Support [[https://github.com/chenyanming/shrface][shrface]]
-- [x] Advanced search and filtering (space separated)
-- [x] Annotation: Support [[https://github.com/chenyanming/paw][paw]]
-- [ ] Exporting.
-- [ ] Editing.
-- [ ] Batch Deletion.
-- [ ] Batch Tagging.
-- [ ] Sorting.
+- Request all entries
+- Request all tags
+- Add tags for one entry
+- Delete tag for one entry
+- Request format for one entry
+- Add entry (Support from eaf browser or elfeed or org-protocol)
+- Insert entry with provided html (Support from eaf browser or elfeed or org-protocol)
+- Delete entry
+- Copy as org/markdown/org-protocol links
+- Offline database (Sqlite)
+- Full update
+- Sidebar supported
+- Select with Ivy/Consult
+- sync with all clients (mobile, web, browser extension etc)
+- Beautify: Support [[https://github.com/chenyanming/shrface][shrface]]
+- Real time search and filtering (space separated)
+- Annotation: Support [[https://github.com/chenyanming/paw][paw]]
+- Cache support: Saved placed/AI Summary Cache
+- Org Protocol Support
 
 * Installation and Configuration
 This project relies on [[https://github.com/tkf/emacs-request][emacs-request]] and [[https://github.com/skeeto/emacsql][emacsql]]. Please install them in advanced.

@@ -42,19 +42,20 @@
 ;; - Add tags for one entry
 ;; - Delete tag for one entry
 ;; - Request format for one entry
-;; - Add one entry
-;; - Add one entry with current buffer content (Only Emacs has this feature!)
-;; - Delete one entry
-;; - Copy as org links (Only Emacs has this feature!)
+;; - Add entry (Support from eaf browser or elfeed or org-protocol)
+;; - Insert entry with provided html (Support from eaf browser or elfeed or org-protocol)
+;; - Delete entry
+;; - Copy as org/markdown/org-protocol links
 ;; - Offline database (Sqlite)
 ;; - Full update
-;; - Real time search and filter
 ;; - Sidebar supported
-;; - Select with Ivy
-;; - sync with all clients (mobile, web, browser extention etc)
+;; - Select with Ivy/Consult
+;; - sync with all clients (mobile, web, browser extension etc)
 ;; - Beautify: Support [[https://github.com/chenyanming/shrface][shrface]]
-;; - Advanced search and filtering (space separated)
+;; - Real time search and filtering (space separated)
 ;; - Annotation: Support [[https://github.com/chenyanming/paw][paw]]
+;; - Cache support: Saved placed/AI Summary Cache
+;; - Org Protocol Support
 
 ;;; Code:
 

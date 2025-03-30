@@ -209,9 +209,13 @@ ALIGN should be a keyword :left or :right."
 
 (defun wallabag-current-cache-save (field value)
   "Save FIELD with VALUE to `wallabag-current-cache`."
-  (unless (hash-table-p wallabag-current-cache)
-    (setq wallabag-current-cache (make-hash-table :test 'equal)))
-  (puthash field value wallabag-current-cache))
+  (let* ((entry (wallabag-find-candidate-at-point))
+         (id (alist-get 'id entry))
+         (cache (gethash id wallabag-cache-table)))
+    (setq wallabag-current-cache cache)
+    (unless (hash-table-p wallabag-current-cache)
+      (setq wallabag-current-cache (make-hash-table :test 'equal)))
+    (puthash field value wallabag-current-cache) ))
 
 (defun wallabag-cache-save ()
   "Save a copy of the current cache to the cache table."
@@ -238,6 +242,7 @@ ALIGN should be a keyword :left or :right."
   (let* ((entry (wallabag-find-candidate-at-point))
          (id (alist-get 'id entry))
          (cache (gethash id wallabag-cache-table)))
+    (setq wallabag-current-cache cache)
     (if (hash-table-p cache)
         (gethash field cache)
       nil)))
@@ -307,6 +312,14 @@ Argument ARG Force to generate summary."
             (wallabag-create-or-update-overlay response)
             (gptel--sanitize-model)
             (gptel--update-status " Ready" 'success)))))))
+
+(defun wallabag-save-place ()
+  "Save the current point to the cache."
+  (when (eq major-mode 'wallabag-entry-mode)
+    (wallabag-current-cache-save 'point (point))
+    (wallabag-current-cache-save 'window-position (window-start))
+    (wallabag-cache-save)
+    (wallabag-cache-write)))
 
 (provide 'wallabag-util)
 

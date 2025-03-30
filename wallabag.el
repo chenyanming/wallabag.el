@@ -1564,6 +1564,7 @@ for other characters, they are printed as they are."
 (define-derived-mode wallabag-entry-mode fundamental-mode "wallabag-entry"
   "Mode for displaying wallabag entry details.
 \\{wallabag-entry-mode-map}"
+  (add-hook 'kill-buffer-hook 'wallabag-save-place nil t)
   (setq buffer-read-only t)
   (buffer-disable-undo))
 
@@ -1643,7 +1644,13 @@ Optional argument HTML to render the content as HTML."
         ;; show cached summary if available
         (if (wallabag-get-cache 'summary)
             (wallabag-summary nil))
-        (goto-char (point-min))))))
+        ;; goto cached point if available
+        (if (wallabag-get-cache 'point)
+            (goto-char (wallabag-get-cache 'point))
+          (goto-char (point-min)))
+        ;; goto cached window start
+        (if (wallabag-get-cache 'window-position)
+            (set-window-start (selected-window) (wallabag-get-cache 'window-position)))))))
 
 (defun wallabag-render-html (begin end)
   "Render HTML between BEGIN and END with shr."

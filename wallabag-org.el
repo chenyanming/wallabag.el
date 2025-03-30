@@ -152,7 +152,7 @@
        (dolist (cand candidates)
          (let* ((id (alist-get 'id cand))
                 (title (alist-get 'title cand))
-                (org-protocol-link (url-encode-url (format "org-protocol://wallabag?id=%s&title=%s" id title) ) ))
+                (org-protocol-link (url-encode-url (format "org-protocol://wallabag?id=%s&title=%s" id (url-hexify-string title)))))
            ;; (insert (format "[[wallabag:%s][%s]]\n" id title))
            (insert org-protocol-link (if (> (length candidates) 1) "\n" ""))
            (message "Copied: %s" org-protocol-link)))

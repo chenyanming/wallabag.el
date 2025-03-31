@@ -23,6 +23,7 @@
 ;;; Code:
 
 (require 'compile)
+(require 'gptel)
 
 (defvar wallabag-emoji-alist nil)
 (defvar wallabag-emoji-candidates nil)
@@ -291,7 +292,6 @@ Optional argument NO-SAVE Don't save to cache."
   "Get the summary of the current entry using gptel.
 Argument ARG Force to generate summary."
   (interactive "P")
-  (require 'gptel)
   (let* ((summary (wallabag-get-cache 'summary))
          (prompt (if (and summary (not arg))
                      ""
@@ -315,7 +315,7 @@ Argument ARG Force to generate summary."
 
 (defun wallabag-save-place ()
   "Save the current point to the cache."
-  (when (eq major-mode 'wallabag-entry-mode)
+  (when (derived-mode-p 'wallabag-entry-mode)
     (wallabag-current-cache-save 'point (point))
     (wallabag-current-cache-save 'window-position (window-start))
     (wallabag-cache-save)

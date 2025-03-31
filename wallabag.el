@@ -7,7 +7,7 @@
 ;; Keywords: tools
 ;; Created: 13 April 2021
 ;; Version: 1.1.0
-;; Package-Requires: ((emacs "27.1") (request "0.3.3") (s "1.12.0") (emacsql "3.0.0"))
+;; Package-Requires: ((emacs "27.1") (request "0.3.3") (s "1.12.0") (emacsql "3.0.0") (gptel "0.8.6"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -321,7 +321,7 @@ When live editing the filter, it is bound to :live.")
 (defun wallabag-request-token-retry (func &rest args)
   "Retrieve a wallabag token and call FUNC with ARGS."
   (cl-function
-   (lambda (&key data error-thrown &allow-other-keys)
+   (lambda (&key data _error-thrown &allow-other-keys)
      (if (not (s-contains? "invalid_grant" data))
          (message "Request failed with: %s" data)
        (message "Authenticating...")
@@ -1565,7 +1565,7 @@ for other characters, they are printed as they are."
 (define-derived-mode wallabag-entry-mode fundamental-mode "wallabag-entry"
   "Mode for displaying wallabag entry details.
 \\{wallabag-entry-mode-map}"
-  (add-hook 'kill-buffer-hook 'wallabag-save-place nil t)
+  (add-hook 'kill-buffer-hook #'wallabag-save-place nil t)
   (setq buffer-read-only t)
   (buffer-disable-undo))
 

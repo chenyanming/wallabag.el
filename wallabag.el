@@ -1729,7 +1729,7 @@ Use `wallabag-toggle-sidebar' or `quit-window' to close the sidebar."
 (defvar wallabag-sidebar-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "'" #'wallabag-toggle-sidebar)
-    (define-key map "<RET>" #'wallabag-sidebar-find-tag)
+    (define-key map (kbd "<RET>") #'wallabag-sidebar-find-tag)
     (define-key map "g" #'wallabag-search-clear-filter)
     (define-key map "G" #'wallabag-search-clear-filter)
     (define-key map "n" #'wallabag-sidebar-find-next-tag)

@@ -148,9 +148,6 @@ Wallabag will use gptel to generate the summary overlay into the begining of the
 Start with ~M-x wallabag~. 
 For the first time you connect to server, you need to press ~u~ to synchronize.
 
-PS: 
-1. The synchronization algorithm is still on development, if you want to keep local database always updated, please use ~wallabag-full-update~.
-
 ** Functions can be used outside wallabag related modes
 | wallabag                                 | Enter ~*wallabag-search*~ buffer.                                                                        |
 | wallabag-find                            | Select wallabag entries from a list with ivy.                                                          |

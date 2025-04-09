@@ -1796,17 +1796,19 @@ Defaults to current directory."
   "Refresh sidebar."
    (with-current-buffer wallabag-sidebar-buffer
     (with-silent-modifications
-      (setq header-line-format (list :propertize "Groups" 'face 'bold))
-      (erase-buffer)
-      (insert (propertize "Unread\n" 'face 'bold))
-      (insert (propertize "Starred\n" 'face 'bold))
-      (insert (propertize "Archive\n" 'face 'bold))
-      (insert (propertize "All\n" 'face 'bold))
-      (insert (propertize "Tags\n" 'face 'bold))
-      ;; insert tags
-      (dolist (tag wallabag-all-tags)
-        (insert (cdr tag))
-        (insert "\n")))
+      (let ((map (make-sparse-keymap)))
+        (define-key map [mouse-1] 'wallabag-sidebar-find-tag)
+        (setq header-line-format (list :propertize "Groups" 'face 'bold))
+        (erase-buffer)
+        (insert (propertize "Unread\n" 'face 'bold 'keymap map))
+        (insert (propertize "Starred\n" 'face 'bold 'keymap map))
+        (insert (propertize "Archive\n" 'face 'bold 'keymap map))
+        (insert (propertize "All\n" 'face 'bold 'keymap map))
+        (insert (propertize "Tags\n" 'face 'bold 'keymap map))
+        ;; insert tags
+        (dolist (tag wallabag-all-tags)
+          (insert (propertize (cdr tag) 'mouse-face 'highlight 'keymap map))
+          (insert "\n")) ))
     (goto-char (point-min))))
 
 (defun wallabag-sidebar-quit ()

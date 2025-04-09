@@ -1515,6 +1515,10 @@ for other characters, they are printed as they are."
   (interactive)
   (setq wallabag-group-filteringp nil)
   (setq wallabag-search-current-page 1)
+
+   (with-current-buffer wallabag-sidebar-buffer
+    (remove-overlays (point-min) (point-max) 'face 'bold-italic))
+
   (wallabag-search-update-buffer-with-keyword "")
   (wallabag))
 
@@ -1821,6 +1825,12 @@ Defaults to current directory."
   "Filter by tag at point."
   (interactive)
   (setq wallabag-group-filteringp t)
+
+  (with-current-buffer wallabag-sidebar-buffer
+    (remove-overlays (point-min) (point-max) 'face 'bold-italic)
+    (let ((ov (make-overlay (line-beginning-position) (line-end-position))))
+      (overlay-put ov 'face 'bold-italic)))
+
   (wallabag-search-update-buffer-with-keyword (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
 
 (defun wallabag-sidebar-find-next-tag ()
@@ -2028,6 +2038,8 @@ Optional argument PROPERTIES The options to chosse different sql codes."
   (interactive)
   (setq wallabag-group-filteringp nil)
   (setq wallabag-search-current-page 1)
+  (with-current-buffer wallabag-sidebar-buffer
+    (remove-overlays (point-min) (point-max) 'face 'bold-italic))
   (wallabag-search-update-buffer-with-keyword ""))
 
 (defun wallabag-search-update-buffer-with-keyword (keyword)

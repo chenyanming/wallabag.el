@@ -3,6 +3,8 @@
 #+SINCE:   <replace with next tagged release version>
 #+STARTUP: inlineimages nofold
 
+[[https://melpa.org/#/wallabag][file:https://melpa.org/packages/wallabag-badge.svg]]
+
 * Table of Contents :TOC_1:noexport:
 - [[#description][Description]]
 - [[#features][Features]]
@@ -49,6 +51,13 @@ This project relies on [[https://github.com/tkf/emacs-request][emacs-request]] a
 git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallabag/
 #+end_src
 
+** Melpa
+It's available on [[https://melpa.org/][Melpa]] :
+
+#+BEGIN_SRC emacs-lisp
+M-x package-install wallabag
+#+END_SRC
+
 ** require
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'load-path "~/.emacs.d/lisp/wallabag/")
@@ -61,6 +70,7 @@ git clone https://github.com/chenyanming/wallabag.el.git ~/.emacs.d/lisp/wallaba
 (setq wallabag-search-print-items '("title" "domain" "tag" "reading-time" "date")) ;; control what content should be show in *wallabag-search*
 (setq wallabag-search-page-max-rows 32) ;; how many items shown in one page
 #+END_SRC
+
 
 ** use-package (load-path)
 #+begin_src emacs-lisp

@@ -69,9 +69,8 @@
 (require 'browse-url)
 (require 's)
 (require 'map)
-(ignore-errors
-  (require 'evil)
-  (require 'ivy))
+(require 'evil nil t)
+(require 'ivy nil t)
 (require 'consult nil t)
 
 (declare-function evil-define-key* "ext:evil-core.el" t t)

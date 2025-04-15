@@ -264,7 +264,8 @@ When live editing the filter, it is bound to :live.")
                                      ("origin_url" . "origin_url"))))
 
 (defcustom wallabag-search-page-max-rows-auto-adjust nil
-  "When non-nil, adjust the max rows of the page based on screen lines."
+  "WORKAROUND: When non-nil, adjust the max rows of the page based on screen lines.
+It is unstable when live search, and the algorithm is also inaccurate."
   :group 'wallabag
   :type 'boolean)
 

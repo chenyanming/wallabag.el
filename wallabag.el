@@ -147,10 +147,19 @@
   :type 'integer)
 
 (defcustom wallabag-show-sidebar nil
-  "Set t to show sidebar when enter *wallabag-search*."
+  "Set t to show sidebar when enter `wallabag-search-buffer-name'."
   :group 'wallabag
   :type 'boolean)
 
+(defcustom wallabag-search-buffer-name "*wallabag-search*"
+  "The name of the wallabag search buffer."
+  :group 'wallabag
+  :type 'string)
+
+(defcustom wallabag-entry-buffer-name "*wallabag-entry*"
+  "The name of the wallabag entry buffer."
+  :group 'wallabag
+  :type 'string)
 
 (define-obsolete-variable-alias 'wallabag-number-of-entries-to-be-retrieved
   'wallabag-number-of-entries-to-be-synchronized "wallabag 1.1.0")
@@ -198,7 +207,7 @@ should change it to contain the rendered version of it."
 
 
 (defcustom wallabag-search-buffer-after-update-hook nil
-  "A hook called after *wallabag-search* has finished update."
+  "A hook called after `wallabag-search-buffer-name' has finished update."
   :group 'wallabag
   :type 'hook)
 
@@ -215,7 +224,7 @@ When live editing the filter, it is bound to :live.")
   "Function that returns the string to be used for the wallabag search header.")
 
 (defvar wallabag-search-print-entry-function #'wallabag-search-print-entry--default
-  "Function to print entries into the *wallabag-search* buffer.")
+  "Function to print entries into the `wallabag-search-buffer-name' buffer.")
 
 (defvar wallabag-all-tags nil)
 
@@ -254,6 +263,17 @@ When live editing the filter, it is bound to :live.")
                                      ("public" . "is_public")
                                      ("origin_url" . "origin_url"))))
 
+(defcustom wallabag-search-page-max-rows-auto-adjust nil
+  "When non-nil, adjust the max rows of the page based on screen lines."
+  :group 'wallabag
+  :type 'boolean)
+
+(defcustom wallabag-search-page-max-rows-auto-adjust-offset 4
+  "WORKAROUND: The offset when auto adjust the max rows.
+It may not be accurate, but it is a good guess."
+  :group 'wallabag
+  :type 'integer)
+
 (defcustom wallabag-search-page-max-rows 31
   "The maximum number of entries to display in a single page."
   :group 'wallabag
@@ -269,6 +289,22 @@ When live editing the filter, it is bound to :live.")
 
 (defvar wallabag-search-pages 0
   "The number of pages in the current search result.")
+
+(defun wallabag-search-page-max-rows ()
+  "Return the maximum number of entries to display.
+In the *wallabag* window."
+  (let ((win (get-buffer-window "*wallabag-search*" 'visible)))
+    (if wallabag-search-page-max-rows-auto-adjust
+        (if (window-live-p win)
+            (let* ((window-pixel-height (window-pixel-height win))
+                   (font-height (line-pixel-height))
+                   (offset (* wallabag-search-page-max-rows-auto-adjust-offset (line-pixel-height))))  ;; Height of mode line
+              ;; Calculate visible height by subtracting header and mode line heights
+              (let ((visible-pixel-height (- window-pixel-height offset)))
+                ;; Calculate the number of lines that fit in the visible height
+                (max 1 (floor visible-pixel-height font-height))))
+          wallabag-search-page-max-rows)
+      wallabag-search-page-max-rows)))
 
 ;;; requests
 
@@ -491,8 +527,8 @@ non-nil integer PAGE retrieval starts at this page."
                     ;; refresh dashboard
                     (with-silent-modifications
                       (wallabag-request-tags)
-                      (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                          (with-current-buffer (get-buffer "*wallabag-search*")
+                      (if (buffer-live-p (get-buffer wallabag-search-buffer-name))
+                          (with-current-buffer (get-buffer wallabag-search-buffer-name)
                             (setq wallabag-search-filter "")
                             (setq current (point))
                             (setq position (window-start))
@@ -623,8 +659,8 @@ Argument PERPAGE Per Page."
                      (t (error "Synchronization error: number-to-be-deleted is %s" number-to-be-deleted))))
                   (with-silent-modifications
                     (wallabag-request-tags)
-                    (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                        (with-current-buffer (get-buffer "*wallabag-search*")
+                    (if (buffer-live-p (get-buffer wallabag-search-buffer-name))
+                        (with-current-buffer (get-buffer wallabag-search-buffer-name)
                           (setq wallabag-search-filter "")
                           (setq current (point))
                           (setq position (window-start))
@@ -720,8 +756,8 @@ TAGS are seperated by comma."
                          (tag (wallabag-convert-tags-to-tag data)))
                     (wallabag-db-update-tags id tags)
                     (wallabag-db-update-tag id tag)
-                    (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                        (with-current-buffer (get-buffer "*wallabag-search*")
+                    (if (buffer-live-p (get-buffer wallabag-search-buffer-name))
+                        (with-current-buffer (get-buffer wallabag-search-buffer-name)
                           (setq ori (point))
                           (wallabag-search-update-buffer)
                           (goto-char ori)) )
@@ -765,8 +801,8 @@ TAGS are seperated by comma."
                         (tag (wallabag-convert-tags-to-tag data)))
                     (wallabag-db-update-tags id tags)
                     (wallabag-db-update-tag id tag)
-                    (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                        (with-current-buffer (get-buffer "*wallabag-search*")
+                    (if (buffer-live-p (get-buffer wallabag-search-buffer-name))
+                        (with-current-buffer (get-buffer wallabag-search-buffer-name)
                           (setq ori (point))
                           (wallabag-search-update-buffer)
                           (goto-char ori)) )
@@ -825,8 +861,8 @@ TAGS are seperated by comma."
                             (goto-char (wallabag-find-candidate-location id))
                             (wallabag-flash-show (line-beginning-position) (line-end-position) 'highlight 0.5))
                         (wallabag-db-insert (list data))
-                        (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                            (with-current-buffer (get-buffer "*wallabag-search*")
+                        (if (buffer-live-p (get-buffer wallabag-search-buffer-name))
+                            (with-current-buffer (get-buffer wallabag-search-buffer-name)
                               (save-excursion
                                 (goto-char (point-min))
                                 (funcall wallabag-search-print-entry-function data))) )
@@ -873,8 +909,8 @@ TAGS are seperated by comma."
                     (let ((inhibit-read-only t)
                           (id (alist-get 'id data)))
                       (wallabag-db-insert (list data))
-                      (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                          (with-current-buffer (get-buffer "*wallabag-search*")
+                      (if (buffer-live-p (get-buffer wallabag-search-buffer-name))
+                          (with-current-buffer (get-buffer wallabag-search-buffer-name)
                             (save-excursion
                               (goto-char (point-min))
                               (funcall wallabag-search-print-entry-function data))) )
@@ -905,8 +941,8 @@ TAGS are seperated by comma."
                     (lambda (&key _data &allow-other-keys)
                       (let ((inhibit-read-only t))
                         (wallabag-db-delete id)
-                        (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                            (with-current-buffer (get-buffer "*wallabag-search*")
+                        (if (buffer-live-p (get-buffer wallabag-search-buffer-name))
+                            (with-current-buffer (get-buffer wallabag-search-buffer-name)
                               (setq ori (point))
                               (wallabag-search-update-buffer wallabag-search-current-page)
                               (goto-char ori)) )
@@ -946,8 +982,8 @@ TAGS are seperated by comma."
                       (let* ((inhibit-read-only t)
                              (content (alist-get ',(intern (alist-get field wallabag-field-mapping nil nil #'equal)) data)))
                         (,(intern (format "wallabag-db-update-%s" (alist-get field wallabag-field-mapping nil nil #'equal))) id content)
-                        (if (buffer-live-p (get-buffer "*wallabag-search*"))
-                            (with-current-buffer (get-buffer "*wallabag-search*")
+                        (if (buffer-live-p (get-buffer wallabag-search-buffer-name))
+                            (with-current-buffer (get-buffer wallabag-search-buffer-name)
                               (setq ori (point))
                               (wallabag-search-update-buffer)
                               (goto-char ori)) )
@@ -1166,8 +1202,14 @@ TAGS are seperated by comma."
   (add-hook 'minibuffer-setup-hook #'wallabag-search-minibuffer-setup))
 
 (defun wallabag-search-buffer ()
-  "Create buffer *wallabag-search*."
-  (get-buffer-create "*wallabag-search*"))
+  "Create buffer `wallabag-search-buffer-name'."
+  (let ((buffer (get-buffer wallabag-search-buffer-name)))
+    (if (buffer-live-p buffer)
+        buffer
+      (setq buffer (get-buffer-create wallabag-search-buffer-name))
+      (with-current-buffer buffer
+        (wallabag-search-mode)))
+    buffer))
 
 ;;;###autoload
 (defun wallabag ()
@@ -1175,14 +1217,12 @@ TAGS are seperated by comma."
   (interactive)
   (wallabag-db)
   (wallabag-emoji-init)
-  (when (get-buffer (wallabag-search-buffer))
-    (kill-buffer (wallabag-search-buffer)))
+  (when (get-buffer wallabag-search-buffer-name)
+    (kill-buffer wallabag-search-buffer-name))
   (switch-to-buffer (wallabag-search-buffer))
   (goto-char (point-min))
   (let ((wallabag-live-filteringp t))
     (wallabag-search-update-buffer wallabag-search-current-page) )
-  (unless (derived-mode-p 'wallabag-search-mode)
-    (wallabag-search-mode))
   (if (and wallabag-show-sidebar wallabag-all-tags)
       (wallabag-sidebar-create-window))
   (run-hooks 'wallabag-after-render-hook))
@@ -1387,28 +1427,28 @@ for other characters, they are printed as they are."
 
 
 (defun wallabag-quit ()
-  "Quit *wallabag-entry* or *wallabag-search*."
+  "Quit `wallabag-entry-buffer-name' or `wallabag-search-buffer-name'."
   (interactive)
   (when (derived-mode-p 'wallabag-search-mode)
-    (cond ((get-buffer "*wallabag-entry*")
-           (pop-to-buffer "*wallabag-entry*")
+    (cond ((get-buffer wallabag-entry-buffer-name)
+           (pop-to-buffer wallabag-entry-buffer-name)
            (if (< (length (window-prev-buffers)) 2)
                (progn
                  (quit-window)
-                 (kill-buffer "*wallabag-entry*"))
-             (kill-buffer "*wallabag-entry*")))
-          ((get-buffer "*wallabag-search*")
+                 (kill-buffer wallabag-entry-buffer-name))
+             (kill-buffer wallabag-entry-buffer-name)))
+          ((get-buffer wallabag-search-buffer-name)
            (quit-window)
-           (kill-buffer "*wallabag-search*")
+           (kill-buffer wallabag-search-buffer-name)
            (wallabag-sidebar-quit)))))
 
 (defun wallabag-search-quit ()
-  "Quit *wallabag-search*."
+  "Quit `wallabag-search-buffer-name'."
   (interactive)
   (when (derived-mode-p 'wallabag-search-mode)
     (emacsql-close (wallabag-db))
     (quit-window)
-    (kill-buffer "*wallabag-search*")
+    (kill-buffer wallabag-search-buffer-name)
     (wallabag-sidebar-quit)))
 
 ;; mark/unmark
@@ -1523,13 +1563,15 @@ for other characters, they are printed as they are."
   (wallabag))
 
 (defun wallabag-search-update-and-clear-filter ()
-  "Request new entries, clear the filter keyword, and update *wallabag-search*."
+  "Request new entries, clear the filter keyword.
+And update `wallabag-search-buffer-name'."
   (interactive)
   (call-interactively #'wallabag-request-new-entries)
   (message "Retriving new articles from wallabag host %s ..." (wallabag-host)))
 
 (defun wallabag-search-synchronize-and-clear-filter ()
-  "Synchronize entries, clear the filter keyword, and update *wallabag-search*."
+  "Synchronize entries, clear the filter keyword.
+And update `wallabag-search-buffer-name'."
   (interactive)
   (call-interactively #'wallabag-request-and-synchronize-entries)
   (message "Synchronizing articles from wallabag host %s ..." (wallabag-host)))
@@ -1574,11 +1616,13 @@ for other characters, they are printed as they are."
 
 (defun wallabag-show--buffer-name ()
   "Return the appropriate buffer name for wallabag entry."
-  "*wallabag-entry*")
+  wallabag-entry-buffer-name)
 
 (defun wallabag-show-entry (entry &optional switch html)
   "Display ENTRY in the current buffer.
-Optional argument SWITCH to switch to *wallabag-entry* buffer to other window.
+Optional argument SWITCH to switch to `wallabag-entry-buffer-name'
+buffer to other window.
+
 Optional argument HTML to render the content as HTML."
   (unless (derived-mode-p 'wallabag-entry-mode)
       (when (get-buffer (wallabag-show--buffer-name))
@@ -1672,18 +1716,18 @@ Optional argument HTML to render the content as HTML."
     (buffer-string)))
 
 (defun wallabag-entry-quit ()
-  "Quit the *wallabag-entry*."
+  "Quit the `wallabag-entry-buffer-name'."
   (interactive)
   (when (derived-mode-p 'wallabag-entry-mode)
-    (when (get-buffer "*wallabag-entry*")
-      (pop-to-buffer "*wallabag-entry*")
+    (when (get-buffer wallabag-entry-buffer-name)
+      (pop-to-buffer wallabag-entry-buffer-name)
       (if (< (length (window-prev-buffers)) 2)
           (progn
             (quit-window)
-            (kill-buffer "*wallabag-entry*"))
-        (kill-buffer "*wallabag-entry*")
-        (when (buffer-live-p (get-buffer "*wallabag-search*"))
-          (switch-to-buffer (get-buffer "*wallabag-search*")))))))
+            (kill-buffer wallabag-entry-buffer-name))
+        (kill-buffer wallabag-entry-buffer-name)
+        (when (buffer-live-p (get-buffer wallabag-search-buffer-name))
+          (switch-to-buffer (get-buffer wallabag-search-buffer-name)))))))
 
 
 ;;; sidebar
@@ -1856,7 +1900,7 @@ Defaults to current directory."
 ;;; live filtering
 
 (defun wallabag-search-live-filter ()
-  "Filter the *wallabag-search* buffer as the filter is written.
+  "Filter the `wallabag-search-buffer-name' buffer as the filter is written.
 Currently, the filtering is column-oriented, not buffer oriented.
 The following columns will be searched:
 
@@ -1891,7 +1935,8 @@ record will be shown.
       (add-hook 'post-command-hook #'wallabag-search-update-buffer-with-minibuffer-contents nil :local))))
 
 (defun wallabag-search-update-buffer-with-minibuffer-contents ()
-  "Update the *wallabag-search* buffer based on the contents of the minibuffer."
+  "Update the `wallabag-search-buffer-name' buffer.
+Based on the contents of the minibuffer."
   (when (eq :live wallabag-search-filter-active)
     ;; (message "HELLO")
     (let ((buffer (wallabag-search-buffer))
@@ -1903,25 +1948,26 @@ record will be shown.
             (wallabag-search-update-buffer)))))))
 
 (defun wallabag-search-update-buffer (&optional page)
-  "Update the *wallabag-search* buffer by PAGE."
+  "Update the `wallabag-search-buffer-name' buffer by PAGE."
   (interactive)
   (with-current-buffer (wallabag-search-buffer)
     (let* ((inhibit-read-only t)
            (standard-output (current-buffer))
            (id 0)
            (entries (wallabag-search-get-filtered-entries page))
-           (len (length entries)))
+           (len (length entries))
+           (rows (wallabag-search-page-max-rows)))
       (setq wallabag-search-entries-length (cdaar (wallabag-db-select
                                                    :sql `[:select (funcall count id)
                                                           :from
                                                           ,(wallabag-search-parse-filter wallabag-search-filter)])))
       (if wallabag-search-entries-length
           (progn
-            (setq wallabag-search-pages (ceiling wallabag-search-entries-length wallabag-search-page-max-rows))
+            (setq wallabag-search-pages (ceiling wallabag-search-entries-length rows))
             (erase-buffer)
             (dolist (entry entries)
               (setq id (1+ id))
-              (if (<= id wallabag-search-page-max-rows)
+              (if (<= id rows)
                   (funcall wallabag-search-print-entry-function entry)))
             (if (< len wallabag-search-entries-length)
                 (dotimes (i wallabag-search-pages)
@@ -1937,7 +1983,7 @@ record will be shown.
 
 (defun wallabag-search-get-filtered-entries (&optional page)
   "Get wallabag entries by PAGE."
-  (wallabag-db-select :sql (wallabag-search-parse-filter wallabag-search-filter :limit wallabag-search-page-max-rows :page page)))
+  (wallabag-db-select :sql (wallabag-search-parse-filter wallabag-search-filter :limit (wallabag-search-page-max-rows) :page page)))
 
 (defun wallabag-search-more-data (page)
   "Update data by PAGE."
@@ -1994,7 +2040,7 @@ Optional argument PROPERTIES The options to chosse different sql codes."
                            ,@(when limit
                                (list :limit limit) )
                            ,@(when page
-                               (list :offset (* (1- page) wallabag-search-page-max-rows)))))))
+                               (list :offset (* (1- page) (wallabag-search-page-max-rows))))))))
      (id `[:select * :from items
            :where (= id ,id)])
      ((or wallabag-live-filteringp (not (string-empty-p wallabag-search-filter) ))
@@ -2011,7 +2057,7 @@ Optional argument PROPERTIES The options to chosse different sql codes."
                        ,@(when limit
                            (list :limit limit) )
                        ,@(when page
-                           (list :offset (* (1- page) wallabag-search-page-max-rows)))))))
+                           (list :offset (* (1- page) (wallabag-search-page-max-rows))))))))
      (t (apply #'vector
                  (append '(:select * :from items)
                          `(,@(list :where
@@ -2031,7 +2077,7 @@ Optional argument PROPERTIES The options to chosse different sql codes."
                            ,@(when limit
                                (list :limit limit) )
                            ,@(when page
-                               (list :offset (* (1- page) wallabag-search-page-max-rows))))))))))
+                               (list :offset (* (1- page) (wallabag-search-page-max-rows)))))))))))
 
 (defun wallabag-search-clear-filter ()
   "Clear the fitler keyword."
@@ -2043,7 +2089,7 @@ Optional argument PROPERTIES The options to chosse different sql codes."
   (wallabag-search-update-buffer-with-keyword ""))
 
 (defun wallabag-search-update-buffer-with-keyword (keyword)
-  "Filter the *wallabag-search* buffer with KEYWORD."
+  "Filter the `wallabag-search-buffer-name' buffer with KEYWORD."
   (setq wallabag-search-filter keyword)
   (wallabag-search-update-buffer))
 

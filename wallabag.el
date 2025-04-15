@@ -1563,8 +1563,9 @@ for other characters, they are printed as they are."
   (setq wallabag-group-filteringp nil)
   (setq wallabag-search-current-page 1)
 
-   (with-current-buffer wallabag-sidebar-buffer
-    (remove-overlays (point-min) (point-max) 'face 'bold-italic))
+  (when (buffer-live-p wallabag-sidebar-buffer)
+    (with-current-buffer wallabag-sidebar-buffer
+      (remove-overlays (point-min) (point-max) 'face 'bold-italic)) )
 
   (wallabag-search-update-buffer-with-keyword "")
   (wallabag))
@@ -2091,8 +2092,9 @@ Optional argument PROPERTIES The options to chosse different sql codes."
   (interactive)
   (setq wallabag-group-filteringp nil)
   (setq wallabag-search-current-page 1)
-  (with-current-buffer wallabag-sidebar-buffer
-    (remove-overlays (point-min) (point-max) 'face 'bold-italic))
+  (when (buffer-live-p wallabag-sidebar-buffer)
+    (with-current-buffer wallabag-sidebar-buffer
+      (remove-overlays (point-min) (point-max) 'face 'bold-italic)) )
   (wallabag-search-update-buffer-with-keyword ""))
 
 (defun wallabag-search-update-buffer-with-keyword (keyword)

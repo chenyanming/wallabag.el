@@ -317,7 +317,6 @@ In the *wallabag* window."
 
 (defun wallabag-credentials ()
   "Get wallabag credentials."
-  (auth-source-forget-all-cached)
   (list
    :host (wallabag-host)
    :username (wallabag-username)
@@ -348,9 +347,7 @@ In the *wallabag* window."
 (defun wallabag-clientid ()
   "Return wallabag clientid."
   (if (s-blank? wallabag-clientid)
-      (progn
-        (auth-source-forget-all-cached)
-        (plist-get (car (auth-source-search :host "wallabag")) :clientid))
+      (plist-get (car (auth-source-search :host "wallabag")) :clientid)
     wallabag-clientid))
 
 (defun wallabag-secret ()

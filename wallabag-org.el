@@ -31,6 +31,16 @@
 (declare-function wallabag-add-entry "wallabag.el")
 (declare-function wallabag-insert-entry "wallabag.el")
 
+(defcustom wallabag-org-protocol-before-hook nil
+  "Hook run before capturing a wallabag entry via org-protocol."
+  :type 'hook
+  :group 'wallabag)
+
+(defcustom wallabag-org-protocol-after-hook nil
+  "Hook run after capturing a wallabag entry via org-protocol."
+  :type 'hook
+  :group 'wallabag)
+
 (defun wallabag-org-link-copy ()
   "Copy the marked items as wallabag org links."
   (interactive)
@@ -185,6 +195,7 @@
          (url (org-protocol-sanitize-uri (or (plist-get data :url) "")))
          (title (or (wallabag-org-capture-html--nbsp-to-space (string-trim (or (plist-get data :title) ""))) ""))
          (content (or (wallabag-org-capture-html--nbsp-to-space (string-trim (or (plist-get data :body) ""))) "")))
+    (run-hooks 'wallabag-org-protocol-before-hook)
     (if id
         (wallabag-show-entry (car (wallabag-db-select :id (string-to-number id))))
       ;; if we `paw-server-html-file' exists, we use it to insert the entry
@@ -199,7 +210,8 @@
               (wallabag-insert-entry url title content))
             (delete-file paw-server-html-file))
         ;; if no `paw-server-html-file' exists, we use the url to fetch the content, and content is empty
-        (wallabag-add-entry url)))
+        (wallabag-add-entry url))
+      (run-hooks 'wallabag-org-protocol-after-hook))
     nil))
 
 (defun wallabag-org-capture-html--nbsp-to-space (s)

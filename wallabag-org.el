@@ -192,6 +192,9 @@
 (defun wallabag-org-protocol (data)
   "Capture wallabag entry from org-protocol DATA."
   (let* ((id (plist-get data :id))
+         (html-file (plist-get data :html_file))
+         (html-file (or (if (file-exists-p html-file) html-file)
+                        (if (file-exists-p paw-server-html-file) paw-server-html-file)))
          (url (org-protocol-sanitize-uri (or (plist-get data :url) "")))
          (title (or (wallabag-org-capture-html--nbsp-to-space (string-trim (or (plist-get data :title) ""))) ""))
          (content (or (wallabag-org-capture-html--nbsp-to-space (string-trim (or (plist-get data :body) ""))) "")))
@@ -199,16 +202,15 @@
     (if id
         (wallabag-show-entry (car (wallabag-db-select :id (string-to-number id))))
       ;; if we `paw-server-html-file' exists, we use it to insert the entry
-      (if (and (boundp 'paw-server-html-file)
-               (file-exists-p paw-server-html-file))
+      (if html-file
           (progn
             (if (string-empty-p content)
                 (wallabag-insert-entry url title (with-temp-buffer
-                                                   (insert-file-contents paw-server-html-file)
+                                                   (insert-file-contents html-file)
                                                    (buffer-string)))
               ;; if the content is not empty, we insert the content directly
               (wallabag-insert-entry url title content))
-            (delete-file paw-server-html-file))
+            (delete-file html-file))
         ;; if no `paw-server-html-file' exists, we use the url to fetch the content, and content is empty
         (wallabag-add-entry url))
       (run-hooks 'wallabag-org-protocol-after-hook))

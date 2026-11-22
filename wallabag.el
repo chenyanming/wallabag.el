@@ -599,12 +599,19 @@ entries do not exist in server will be deleted."
                       ;; (message "Found there may have %s new articles." number-of-retrieved)
                       (wallabag-request-and-insert-entries number-of-retrieved 'wallabag-request-and-delete-entries total)))))))))
 
+(defun wallabag--bool-to-int (value)
+  "Return VALUE as the 0/1 the database stores booleans in."
+  (cond ((eq value t) 1)
+        ((eq value :json-false) 0)
+        (t value)))
+
 (defun wallabag-request-and-delete-entries (perpage)
-  "Request and delete entries.
-Request and check `wallabag-number-of-entries-to-be-synchronized'
-entries, entries that do not exist in the server will be deleted. Please
-notice: this function should be called only when no new entires in the
-server!
+  "Request and verify entries, then update the local database.
+Request `wallabag-number-of-entries-to-be-synchronized' entries (all of them
+when it is negative), insert the ones the database lacks, copy their
+is_archived and is_starred from the server, and delete the entries that no
+longer exist there.  Called last by
+`wallabag-request-and-synchronize-entries'.
 Argument PERPAGE Per Page."
   (setq wallabag-retrieving-p "Verifing...") ; indicate it is retrieving.
   (let ((host (wallabag-host))
@@ -653,6 +660,24 @@ Argument PERPAGE Per Page."
                          (number-to-be-deleted (length to-be-deleted)))
                     ;; delete the non exist entries replied from wallabag server
                     (wallabag-db-delete to-be-deleted)
+
+                    ;; Insert the entries the cache lacks. The insert step
+                    ;; that runs first only sees ids above the newest local
+                    ;; one, so an entry created on another client whose id
+                    ;; fell below that is never inserted; INSERT OR IGNORE
+                    ;; leaves the rows that do exist alone.
+                    (wallabag-db-insert entries)
+
+                    ;; The server is the truth about archived and starred:
+                    ;; a change made in the web UI or on another client never
+                    ;; reached the cache otherwise, so the entry stayed in
+                    ;; the Unread list (and in every query on is_archived).
+                    (dolist (entry entries)
+                      (let ((id (alist-get 'id entry)))
+                        (wallabag-db-update-is_archived
+                         id (wallabag--bool-to-int (alist-get 'is_archived entry)))
+                        (wallabag-db-update-is_starred
+                         id (wallabag--bool-to-int (alist-get 'is_starred entry)))))
 
                     (setq wallabag-db-newp nil)
                     (cond
